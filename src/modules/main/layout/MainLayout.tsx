@@ -1,12 +1,23 @@
 import type { ReactNode } from "react";
-import HomeNavbar from "../components/HomeNavbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+
+import HomeNavbar from "../components/HomeNavbar";
+import HomeSidebar from "../components/HomeSidebar";
+import FilterSidebar from "../components/FilterSidebar";
 
 function MainLayout({ children }: { children: ReactNode }) {
   return (
     <div>
-      <SidebarProvider>navbar + side bar</SidebarProvider>
-      {/* <HomeNavbar /> */}
+      <SidebarProvider>
+        <div className="w-full">
+          <HomeNavbar />
+          <div className="flex min-h-screen">
+            <HomeSidebar />
+            <FilterSidebar />
+            <main>{children}</main>
+          </div>
+        </div>
+      </SidebarProvider>
     </div>
   );
 }
