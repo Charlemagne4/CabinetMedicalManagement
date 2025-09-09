@@ -4,10 +4,7 @@ import FilterFeaturesSection from "../sections/FilterFeaturesSection";
 function FilterSidebar() {
   return (
     <div>
-      <Sidebar
-        collapsible="none"
-        className="bg-sidebar-accent min-h-screen w-1/5"
-      >
+      <Sidebar collapsible="none" className="bg-sidebar-accent min-h-screen">
         <SidebarContent>
           <FilterFeaturesSection />
         </SidebarContent>
