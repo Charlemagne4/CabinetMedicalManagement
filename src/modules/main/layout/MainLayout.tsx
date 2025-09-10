@@ -9,12 +9,12 @@ function MainLayout({ children }: { children: ReactNode }) {
   return (
     <div>
       <SidebarProvider>
-        <div>
+        <div className="sticky w-full flex-col">
           <HomeNavbar />
-          <div className="flex min-h-screen">
+          <div className="sticky flex">
             <HomeSidebar />
             <FilterSidebar />
-            <main>{children}</main>
+            <main className="flex">{children}</main>
           </div>
         </div>
       </SidebarProvider>

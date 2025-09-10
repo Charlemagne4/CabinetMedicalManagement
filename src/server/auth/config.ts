@@ -1,5 +1,5 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { type DefaultSession, type NextAuthConfig } from "next-auth";
+import { type DefaultSession, type JWT, type NextAuthConfig, type Session, type User } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
 import Credentials from "next-auth/providers/credentials";
@@ -7,6 +7,9 @@ import Credentials from "next-auth/providers/credentials";
 import { db } from "@/server/db";
 import { prisma } from "prisma/prisma";
 import { comparePasswords } from "@/utils/passwordHasher";
+import type { Role } from "@prisma/client";
+// import { logger } from "@/utils/pino";
+import { signInFormSchema } from "@/modules/auth/ui/components/MyForm/Schema";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -14,19 +17,30 @@ import { comparePasswords } from "@/utils/passwordHasher";
  *
  * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
  */
-declare module "next-auth" {
-  interface Session extends DefaultSession {
+declare module 'next-auth' {
+  interface Session {
     user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
-    } & DefaultSession["user"];
+      name?: string;
+      email?: string;
+      image?: string;
+      role: string;
+    };
   }
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+  interface User {
+    role?: string;
+    id?: string;
+  }
+}
+
+
+
+declare module 'next-auth' {
+  interface JWT {
+    id?: string;
+    role?: string; // Allow role to be any string
+  }
 }
 
 /**
@@ -35,14 +49,13 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authConfig = {
+   session: {
+    strategy: "jwt",        // mandatory for credentials
+    maxAge: 30 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
+  },
   providers: [
     Credentials({
-      // The name to display on the sign in form (e.g. "Sign in with...")
-      name: "Credentials",
-      // `credentials` is used to generate a form on the sign in page.
-      // You can specify which fields should be submitted, by adding keys to the `credentials` object.
-      // e.g. domain, username, password, 2FA token, etc.
-      // You can pass any HTML attribute to the <input> tag through the object.
       credentials: {
         email: { label: "Email", type: "email", placeholder: "Chaklamo" },
         password: {
@@ -52,35 +65,41 @@ export const authConfig = {
         },
       },
       authorize: async (credentials) => {
-        console.log(credentials);
+        // logger.debug(credentials);
+        const { email, password } =
+          await signInFormSchema.parseAsync(credentials);
         // Add logic here to look up the user from the credentials supplied
         const user = await prisma.user.findUnique({
-          where: { email: credentials?.email },
+          where: { email },
         });
+        // logger.debug(`User in db: ${user?.email}`);
 
-        console.log("AAAAA");
-        if (!user) return null;
+        if (!user) throw new Error("Invalid credentials.");
 
-        console.log("AAAAA");
-        console.log(!user.password);
-        console.log(!user.salt);
-        console.log(!credentials?.password);
         if (!user.password || !user.salt || !credentials?.password) {
           // logger.warn("Missing credentials or user data during login attempt");
           return null;
         }
         console.log("AAAAA");
+        // logger.debug(
+        //   await comparePasswords({
+        //     hashedPassword: user.password,
+        //     password,
+        //     salt: user.salt,
+        //   }),
+        // );
+        
         if (
           await comparePasswords({
             hashedPassword: user.password,
-            password: credentials.password,
+            password,
             salt: user.salt,
           })
         ) {
           // Any object returned will be saved in `user` property of the JWT
+          // logger.debug(`user in db: ${user}`);
           return user;
         } else {
-          console.log("AAAAA");
           // If you return null then an error will be displayed advising the user to check their details.
           return null;
 
@@ -88,25 +107,28 @@ export const authConfig = {
         }
       },
     }),
-    DiscordProvider,
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
   ],
+  pages: {
+    signIn: "/signin",
+  },
   adapter: PrismaAdapter(db),
   callbacks: {
-    session: ({ session, user }) => ({
+ async jwt({ token, user }: { token: JWT; user: User }) {
+      if (user) {
+      token.id = user.id;
+      token.role = user.role;
+    }
+    return token;
+    },
+    async session({ session, token }: { token: JWT; session: Session}) {
+      return {
       ...session,
       user: {
         ...session.user,
-        id: user.id,
+        id: token.id!,
+        role: token.role!,
       },
-    }),
-  },
+    };
+    },
+},
 } satisfies NextAuthConfig;

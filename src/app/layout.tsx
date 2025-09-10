@@ -7,6 +7,7 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -32,9 +33,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TRPCReactProvider>
-            <Toaster />
-            {children}
-            <ReactQueryDevtools initialIsOpen={false} />
+            <SessionProvider>
+              <Toaster />
+              {children}
+              <ReactQueryDevtools initialIsOpen={false} />
+            </SessionProvider>
           </TRPCReactProvider>
         </ThemeProvider>
       </body>
