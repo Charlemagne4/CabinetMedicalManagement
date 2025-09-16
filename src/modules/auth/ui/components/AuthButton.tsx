@@ -38,7 +38,7 @@ function AuthButton() {
   if (status === "loading") return <AuthButtonSkeleton />;
   //TODO: make the signin button redirect to initial Page
   if (status === "unauthenticated") {
-    console.log("unauthenticated:",session)
+    console.log("unauthenticated:", session);
     // logger.debug(`user Role: ${session}`);
     // logger.debug(`user ID: ${session}`);
     // logger.debug(`user email: ${session}`);
@@ -56,7 +56,7 @@ function AuthButton() {
   }
 
   if (status === "authenticated") {
-      console.log(session)
+    console.log(session);
     // logger.debug(`user Role${session.user.role}`);
     // logger.debug(`user ID: ${session?.user.id}`);
     // logger.debug(`user email: ${session?.user.email}`);
@@ -68,10 +68,10 @@ function AuthButton() {
           // aria-haspopup="true"
         >
           <div className="flex items-center justify-center gap-3">
-            <p className="hidden md:block">{session.user?.name || "User"}</p>
+            <p className="hidden md:block">{session.user?.name ?? "User"}</p>
             <Image
               className="rounded-full object-contain"
-              src={session.user?.image || USER_IMAGE_FALLBACK} // TODO:Use a default image if not available
+              src={session.user?.image ?? USER_IMAGE_FALLBACK} // TODO:Use a default image if not available
               alt="User image"
               width={40}
               height={40}
