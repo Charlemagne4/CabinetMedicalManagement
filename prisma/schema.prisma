@@ -21,8 +21,9 @@ model User {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    role  Role    @default(user)
-    Shift Shift[]
+    role      Role        @default(user)
+    Shift     Shift[]
+    Operation Operation[]
 }
 
 enum Role {
@@ -78,14 +79,15 @@ model VerificationToken {
 }
 
 model Shift {
-    id       String    @id @default(auto()) @map("_id") @db.ObjectId
-    type     ShiftType
-    date     DateTime
-    userId   String    @db.ObjectId
-    user     User      @relation(fields: [userId], references: [id])
-    cashFund CashFund?
-    recettes Recette[]
-    expenses Depense[]
+    id            String         @id @default(auto()) @map("_id") @db.ObjectId
+    type          ShiftType
+    date          DateTime
+    userId        String         @db.ObjectId
+    user          User           @relation(fields: [userId], references: [id])
+    cashFund      CashFund?
+    consultations Consultation[]
+    recettes      Recette[]
+    expenses      Depense[]
 }
 
 model CashFund {
@@ -109,18 +111,14 @@ model Recette {
 }
 
 model Consultation {
-    id       String           @id @default(auto()) @map("_id") @db.ObjectId
+    id       String   @id @default(auto()) @map("_id") @db.ObjectId
     patient  String
     amount   Float
-    date     DateTime         @default(now())
-    type     ConsultationType @default(CONSULTATION)
-    credit   Credit?          @relation(fields: [creditId], references: [id])
-    creditId String?          @db.ObjectId
-}
-
-enum ConsultationType {
-    CONSULTATION
-    BILAN
+    date     DateTime @default(now())
+    credit   Credit?  @relation(fields: [creditId], references: [id])
+    creditId String?  @db.ObjectId
+    Shift    Shift?   @relation(fields: [shiftId], references: [id])
+    shiftId  String?  @db.ObjectId
 }
 
 model Depense {
@@ -136,7 +134,28 @@ model Credit {
     id             String         @id @default(auto()) @map("_id") @db.ObjectId
     amount         Float
     isPaid         Boolean        @default(false)
-    dueDate        DateTime?
+    date           DateTime       @default(now())
     consultationId String         @unique @db.ObjectId
     Consultation   Consultation[]
+}
+
+model Operation {
+    id   String   @id @default(auto()) @map("_id") @db.ObjectId
+    date DateTime @default(now())
+
+    // refId ids the actual entry in the seaparate tables
+    refId  String    @db.ObjectId
+    type   EntryType
+    amount Float
+    label  String
+
+    userId String? @db.ObjectId
+    user   User?   @relation(fields: [userId], references: [id])
+}
+
+enum EntryType {
+    CONSULTATION
+    BILAN
+    CREDIT
+    DEPENSE
 }
