@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import AuthButton from "@/modules/auth/ui/components/AuthButton";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function HomeNavbar() {
   return (

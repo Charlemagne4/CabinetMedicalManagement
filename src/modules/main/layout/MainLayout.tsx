@@ -7,14 +7,13 @@ import FilterSidebar from "../components/FilterSidebar";
 
 function MainLayout({ children }: { children: ReactNode }) {
   return (
-    <div>
+    <div className="">
       <SidebarProvider>
-        <div className="sticky w-full flex-col">
+        <div className="w-full min-w-screen flex-col">
           <HomeNavbar />
-          <div className="sticky flex">
+          <div className="flex h-screen">
             <HomeSidebar />
-            <FilterSidebar />
-            <main className="flex">{children}</main>
+            <main className="flex w-screen">{children}</main>
           </div>
         </div>
       </SidebarProvider>

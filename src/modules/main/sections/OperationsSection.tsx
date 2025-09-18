@@ -28,11 +28,11 @@ function OperationsSectionSuspense() {
   );
   return (
     <div>
-      <div className="flex flex-col">
-        <div className="grid grid-cols-5">
-          <div>{"type"}</div>
-          <div>{"label"}</div>
-          <div>{"amount"}</div>
+      <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-4">
+          <div>{"Entrée"}</div>
+
+          <div>{"Montant"}</div>
           <div>{"date"}</div>
           <div>{"userId"}</div>
         </div>

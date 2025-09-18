@@ -3,13 +3,11 @@ import MainFeaturesSection from "../sections/MainFeaturesSection";
 
 function HomeSidebar() {
   return (
-    <div>
-      <Sidebar collapsible="none" className="w-15">
-        <SidebarContent>
-          <MainFeaturesSection />
-        </SidebarContent>
-      </Sidebar>
-    </div>
+    <Sidebar collapsible="none" className="w-15">
+      <SidebarContent>
+        <MainFeaturesSection />
+      </SidebarContent>
+    </Sidebar>
   );
 }
 export default HomeSidebar;
