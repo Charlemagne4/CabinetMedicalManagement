@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import AuthButton from "@/modules/auth/ui/components/AuthButton";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import AddEntryModal from "@/modules/Entries/components/AddEntryModal";
 
 export default function HomeNavbar() {
   return (
@@ -21,6 +21,7 @@ export default function HomeNavbar() {
           <SearchInput />
         </div> */}
         <div className="flex shrink-0 items-center gap-4">
+          <AddEntryModal />
           <AuthButton />
         </div>
       </div>

@@ -2,7 +2,12 @@ import { prisma } from "../../../../prisma/prisma";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { logger } from "@/utils/pino";
+import { ConsultationCreateSchema, DepenseCreateSchema } from "@/types/Entries";
+
+const EntrySchema = z.discriminatedUnion("type", [
+  DepenseCreateSchema.extend({ type: z.literal("depense") }),
+  ConsultationCreateSchema.extend({ type: z.literal("consultation") }),
+]);
 
 export const entriesRouter = createTRPCRouter({
   getMany: protectedProcedure
@@ -58,5 +63,16 @@ export const entriesRouter = createTRPCRouter({
           message: "Registration failed",
         });
       }
+    }),
+  create: protectedProcedure
+    .input(
+      z.object({
+        entry: EntrySchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      console.log("entry to add: ", input);
+
+      return true;
     }),
 });
