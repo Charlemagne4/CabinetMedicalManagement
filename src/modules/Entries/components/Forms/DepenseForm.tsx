@@ -38,7 +38,7 @@ function DepenseForm({ shiftId }: { shiftId: string }) {
 
   const onSubmit = (values: DepenseFormValues) => {
     create.mutate({
-      entry: { ...values, type: "depense" },
+      entry: { ...values, type: "DEPENSE" },
     });
   };
 

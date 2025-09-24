@@ -40,7 +40,7 @@ function ConsultationForm() {
   // 4️⃣ Soumission
   const onSubmit = (values: ConsultationFormValues) => {
     create.mutate({
-      entry: { ...values, type: "consultation" },
+      entry: { ...values, type: "CONSULTATION" },
     });
   };
 

@@ -25,24 +25,9 @@ export default function EntryForms() {
       <TabsContent value={EntryType.CONSULTATION}>
         <ConsultationForm />
       </TabsContent>
-      <TabsContent value={EntryType.BILAN}>
-        <BilanForm />
-      </TabsContent>
-      <TabsContent value={EntryType.CREDIT}>
-        <CreditForm />
-      </TabsContent>
       <TabsContent value={EntryType.DEPENSE}>
         <DepenseForm shiftId={""} />
       </TabsContent>
     </Tabs>
   );
-}
-
-/* Example forms */
-
-function BilanForm() {
-  return <p className="rounded border p-4">Bilan Form</p>;
-}
-function CreditForm() {
-  return <p className="rounded border p-4">Credit Form</p>;
 }

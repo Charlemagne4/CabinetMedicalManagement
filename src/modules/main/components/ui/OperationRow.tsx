@@ -26,8 +26,6 @@ function OperationRow({ entry }: OperationRowProps) {
             "rounded px-2 py-0.5 text-xs font-semibold text-white",
             entry.type === "DEPENSE" && "bg-red-600",
             entry.type === "CONSULTATION" && "bg-green-600",
-            entry.type === "BILAN" && "bg-yellow-500 text-black",
-            entry.type === "CREDIT" && "bg-pink-600",
           )}
         >
           {entry.type}
