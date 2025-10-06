@@ -9,12 +9,12 @@ import ResponsiveModal from "@/components/ResponsiveModal";
 import { useState } from "react";
 import AddEntryForm from "./AddEntryForm";
 
-function StudioUploadModal() {
+function AddEntryModal() {
   const utils = api.useUtils();
   const [entryModalOpen, setEntryModalOpen] = useState(false);
   const create = api.entries.create.useMutation({
     onSuccess: async () => {
-      toast.success("Video Created");
+      toast.success("Entrée Crée");
       await utils.entries.invalidate();
     },
     onError: (error) => {
@@ -46,4 +46,4 @@ function StudioUploadModal() {
     </>
   );
 }
-export default StudioUploadModal;
+export default AddEntryModal;

@@ -4,7 +4,6 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { ConsultationCreateSchema, DepenseCreateSchema } from "@/types/Entries";
 import type { Session } from "next-auth";
-import { EntryType } from "@prisma/client";
 
 const entrySchema = z.discriminatedUnion("type", [
   DepenseCreateSchema.extend({ type: z.literal("DEPENSE") }),

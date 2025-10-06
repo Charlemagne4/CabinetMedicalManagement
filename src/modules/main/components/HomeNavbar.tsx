@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import AuthButton from "@/modules/auth/ui/components/AuthButton";
 import AddEntryModal from "@/modules/Entries/components/AddEntryModal";
+import StartShiftModal from "@/modules/shifts/components/StartShiftModal";
 
 export default function HomeNavbar() {
   return (
@@ -21,6 +22,7 @@ export default function HomeNavbar() {
           <SearchInput />
         </div> */}
         <div className="flex shrink-0 items-center gap-4">
+          <StartShiftModal />
           <AddEntryModal />
           <AuthButton />
         </div>

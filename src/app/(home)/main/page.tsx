@@ -16,7 +16,7 @@ async function main() {
 
   return (
     <HydrateClient>
-      <MainView shift={shift} />
+      <MainView />
     </HydrateClient>
   );
 }
