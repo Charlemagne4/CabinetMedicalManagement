@@ -5,21 +5,36 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { ConsultationCreateSchema, DepenseCreateSchema } from "@/types/Entries";
 import dayjs from "dayjs";
 
-const entrySchema = z.discriminatedUnion("type", [
-  DepenseCreateSchema.extend({ type: z.literal("DEPENSE") }),
-  ConsultationCreateSchema.extend({ type: z.literal("CONSULTATION") }),
-]);
-
 export const ShiftRouter = createTRPCRouter({
   getCurrent: protectedProcedure.query(async ({ input, ctx }) => {
     try {
-      const shift = await ctx.db.shift.findFirst({
+      const now = dayjs();
+
+      // 1️⃣ Check if the user already has an active or ongoing shift
+      const currentShift = await ctx.db.shift.findFirst({
         where: {
-          userId: ctx.session.user.id,
           OR: [{ endTime: null }, { endTime: { isSet: false } }],
         },
+        include: { template: true },
       });
-      return shift;
+
+      // 🟢 CASE 1: No shift at all → user can start immediately
+      if (!currentShift) return true;
+
+      // 🟢 CASE 1.5: No shift at all → user can start immediately
+      // if (currentShift.userId === ctx.session.user.id) return false;
+
+      // 2️⃣ Check if user can start next shift early
+      const { endHour } = currentShift.template;
+
+      // Example: allow starting next shift if within 1 hour before its end
+      const isWithinNextShiftWindow = now.hour() + 1 >= endHour;
+
+      // 🟢 CASE 2: Current shift is ending soon → allow early start
+      if (isWithinNextShiftWindow) return true;
+
+      // 🔴 Otherwise, deny starting a new shift
+      return false;
     } catch (err) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -33,28 +48,58 @@ export const ShiftRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { session } = ctx;
+      const { cashfund } = input;
       const now = dayjs();
-      const currentShift = await prisma.shift.findFirst({
+
+      // Find current shift template matching current time
+      const template = await prisma.shiftTemplate.findFirstOrThrow({
         where: {
-          startTime: { gte: now.toDate() },
-          endTime: now.toDate(),
+          startHour: { lte: now.hour() },
+          endHour: { gte: now.hour() },
         },
-      });
-      if (currentShift?.userId === session.user.id) {
-        throw new TRPCError({ code: "BAD_REQUEST" });
-      }
-      await prisma.shift.updateMany({
-        where: {
-          AND: [
-            { startTime: { gte: now.toDate() } },
-            { OR: [{ endTime: { lte: now.toDate() } }, { endTime: null }] },
-          ],
-        },
-        data: { endTime: now.toDate() },
       });
 
-      const createdShift = await prisma.shift.create({
-        data: { startTime: now.toDate(), userId: session.user.id },
+      // Check if user already has an active shift
+      const currentShift = await prisma.shift.findFirst({
+        where: {
+          userId: session.user.id,
+          endTime: null,
+        },
+        include: { template: true },
+      });
+
+      // 🕒 Check if within 1h before next shift
+      const isWithinNextShiftWindow =
+        currentShift && now.hour() + 1 >= currentShift.template.endHour;
+
+      // ❌ Prevent user from starting multiple shifts
+      if (currentShift && !isWithinNextShiftWindow) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You already have an active shift.",
+        });
+      }
+
+      // If we reach here, close old shifts & start a new one
+      await prisma.$transaction(async (tx) => {
+        // Close any open shifts
+        await tx.shift.updateMany({
+          where: {
+            userId: session.user.id,
+            OR: [{ endTime: null }, { endTime: { isSet: false } }],
+          },
+          data: { endTime: now.toDate() },
+        });
+
+        // Create new shift
+        await tx.shift.create({
+          data: {
+            templateId: template.id,
+            startTime: now.toDate(),
+            userId: session.user.id,
+            cashFund: { create: { amount: cashfund } },
+          },
+        });
       });
 
       return true;

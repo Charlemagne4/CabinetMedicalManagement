@@ -12,7 +12,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 function StartShiftModal() {
-  const { data: currentShift } = api.shifts.getCurrent.useQuery();
+  const { data: canStartNewShift } = api.shifts.getCurrent.useQuery();
   const { data: session, status } = useSession();
 
   const utils = api.useUtils();
@@ -34,7 +34,7 @@ function StartShiftModal() {
   if (status === "loading") return <Skeleton />;
   if (status === "unauthenticated") return null;
 
-  if (currentShift?.userId === session?.user.id) return null;
+  if (!canStartNewShift) return null;
 
   return (
     <>
