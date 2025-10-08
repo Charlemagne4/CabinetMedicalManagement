@@ -22,7 +22,7 @@ export const DepenseCreateSchema = z.object({
   label: z.string(),
   amount: z.number(),
   date: z.date().optional(), // par défaut now()
-  shiftId: z.string(),
+  shiftId: z.string().optional(),
 });
 
 export const DepenseUpdateSchema = z.object({

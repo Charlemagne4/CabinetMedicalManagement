@@ -26,7 +26,7 @@ export default function EntryForms() {
         <ConsultationForm />
       </TabsContent>
       <TabsContent value={EntryType.DEPENSE}>
-        <DepenseForm shiftId={""} />
+        <DepenseForm />
       </TabsContent>
     </Tabs>
   );

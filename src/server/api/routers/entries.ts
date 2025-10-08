@@ -4,6 +4,8 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { ConsultationCreateSchema, DepenseCreateSchema } from "@/types/Entries";
 import type { Session } from "next-auth";
+import { getCurrentShift } from "@/modules/shifts/functions/StartShiftOnLogin";
+import type { Shift } from "@prisma/client";
 
 const entrySchema = z.discriminatedUnion("type", [
   DepenseCreateSchema.extend({ type: z.literal("DEPENSE") }),
@@ -29,10 +31,15 @@ export const entriesRouter = createTRPCRouter({
         const { limit, cursor } = input;
         const { id: userId } = ctx.session.user;
 
-        console.log(userId);
+        // console.log(userId);
         if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
         const data = await prisma.operation.findMany({
+          orderBy: [
+            { date: "desc" },
+            { id: "desc" }, // secondary key for stable ordering
+          ],
+          take: limit + 1, // fetch one extra to check if there's more
           ...(cursor
             ? {
                 cursor: { date: cursor.date, id: cursor.id },
@@ -76,7 +83,15 @@ export const entriesRouter = createTRPCRouter({
       const { session } = ctx;
       const { entry } = input;
 
-      await addEntry(entry, session);
+      const currentShift = await getCurrentShift();
+
+      if (!currentShift)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "no shift active",
+        });
+
+      await addEntry(entry, session, currentShift?.id);
 
       return true;
     }),
@@ -85,6 +100,7 @@ export const entriesRouter = createTRPCRouter({
 async function addEntry(
   entry: z.infer<typeof entrySchema>,
   session: Pick<Session, "user">,
+  shiftId: string,
 ) {
   return await prisma.$transaction(async (tx) => {
     //entering in Entry table
@@ -94,7 +110,10 @@ async function addEntry(
       case "CONSULTATION": {
         const consultation = await tx.consultation.create({
           data: {
-            ...entry,
+            shiftId,
+            amount: entry.amount,
+            patient: entry.patient,
+            type: "CONSULTATION",
           },
         });
         refId = consultation.id;
@@ -103,8 +122,10 @@ async function addEntry(
       case "DEPENSE": {
         const depense = await tx.depense.create({
           data: {
+            shiftId,
             // map only depense-specific fields
-            ...entry,
+            amount: entry.amount,
+            label: entry.label,
           },
         });
         refId = depense.id;
@@ -119,6 +140,7 @@ async function addEntry(
     //entering in operation table
     const operation = await tx.operation.create({
       data: {
+        shiftId,
         amount: entry.amount,
         type: entry.type,
         refId,

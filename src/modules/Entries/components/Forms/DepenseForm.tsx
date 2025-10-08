@@ -11,7 +11,7 @@ import { DepenseCreateSchema as DepenseSchema } from "@/types/Entries";
 
 type DepenseFormValues = z.infer<typeof DepenseSchema>;
 
-function DepenseForm({ shiftId }: { shiftId: string }) {
+function DepenseForm() {
   const utils = api.useUtils();
   const create = api.entries.create.useMutation({
     onSuccess: async () => {
@@ -32,7 +32,6 @@ function DepenseForm({ shiftId }: { shiftId: string }) {
     defaultValues: {
       label: "",
       amount: 0,
-      shiftId, // injecté depuis le parent
     },
   });
 

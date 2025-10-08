@@ -28,56 +28,54 @@ async function getShiftTemplateForNow() {
   return template;
 }
 
-export async function startShiftOnLogin(userId: string) {
-  const now = dayjs();
-  const todayStart = now.startOf("day").toDate();
+// export async function startShiftOnLogin(userId: string) {
+//   const now = dayjs();
+//   const todayStart = now.startOf("day").toDate();
 
-  // find active shift
-  let shift = await prisma.shift.findFirst({
-    where: { startTime: { gte: todayStart } },
-  });
+//   // find active shift
+//   let shift = await prisma.shift.findFirst({
+//     where: { startTime: { gte: todayStart } },
+//   });
 
-  if (shift?.userId === userId) {
-    return { ...shift, continueShiftRequest: true };
-  }
+//   if (shift?.userId === userId) {
+//     return { ...shift, continueShiftRequest: true };
+//   }
 
-  if (!shift) {
-    const template = await getShiftTemplateForNow();
+//   if (!shift) {
+//     const template = await getShiftTemplateForNow();
 
-    shift = await prisma.shift.create({
-      data: {
-        startTime: now.toDate(),
-        userId: userId,
-        confirmed: true,
-        templateId: template?.id, // 👈 link to template if found
-      },
-    });
-  } else if (!shift.userId) {
-    shift = await prisma.shift.update({
-      where: { id: shift.id },
-      data: { userId },
-    });
-  }
+//     shift = await prisma.shift.create({
+//       data: {
+//         startTime: now.toDate(),
+//         userId: userId,
+//         confirmed: true,
+//         templateId: template?.id, // 👈 link to template if found
+//       },
+//     });
+//   } else if (!shift.userId) {
+//     shift = await prisma.shift.update({
+//       where: { id: shift.id },
+//       data: { userId },
+//     });
+//   }
 
-  return { ...shift, continueShiftRequest: false };
-}
+//   return { ...shift, continueShiftRequest: false };
+// }
 
 export async function getCurrentShift() {
-  const now = dayjs().toDate();
-
-  console.log("now: ", now);
+  const now = dayjs();
 
   const currentShift = await prisma.shift.findFirst({
     where: {
-      startTime: { gte: now }, // started already
+      startTime: { lte: now.toDate() }, // started already
       OR: [
         { endTime: null }, // not finished
-        { endTime: { lte: now } }, // still active
+        { endTime: { isSet: false } }, // not finished
+        { endTime: { gt: now.toDate() } }, // still active
       ],
     },
     include: { template: true },
     orderBy: { startTime: "desc" },
   });
-  console.log("currentShift", currentShift);
   return currentShift;
 }
