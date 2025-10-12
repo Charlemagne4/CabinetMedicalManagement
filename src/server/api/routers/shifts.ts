@@ -13,11 +13,14 @@ export const ShiftRouter = createTRPCRouter({
       // 1️⃣ Check if the user already has an active or ongoing shift
       const currentShift = await ctx.db.shift.findFirst({
         where: {
-          OR: [{ endTime: null }, { endTime: { isSet: false } }],
+          AND: [
+            { startTime: { lte: now.toDate() } },
+            { OR: [{ endTime: null }, { endTime: { isSet: false } }] },
+          ],
         },
         include: { template: true },
       });
-
+      console.log("currentShift", currentShift);
       // 🟢 CASE 1: No shift at all → user can start immediately
       if (!currentShift) return true;
 
@@ -62,8 +65,7 @@ export const ShiftRouter = createTRPCRouter({
       // Check if user already has an active shift
       const currentShift = await prisma.shift.findFirst({
         where: {
-          userId: session.user.id,
-          endTime: null,
+          AND: [{ OR: [{ endTime: null }, { endTime: { isSet: false } }] }],
         },
         include: { template: true },
       });
@@ -73,7 +75,10 @@ export const ShiftRouter = createTRPCRouter({
         currentShift && now.hour() + 1 >= currentShift.template.endHour;
 
       // ❌ Prevent user from starting multiple shifts
-      if (currentShift && !isWithinNextShiftWindow) {
+      if (
+        currentShift?.userId === session.user.id &&
+        !isWithinNextShiftWindow
+      ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "You already have an active shift.",
@@ -85,8 +90,8 @@ export const ShiftRouter = createTRPCRouter({
         // Close any open shifts
         await tx.shift.updateMany({
           where: {
-            userId: session.user.id,
-            OR: [{ endTime: null }, { endTime: { isSet: false } }],
+            id: currentShift?.id,
+            AND: [{ OR: [{ endTime: null }, { endTime: { isSet: false } }] }],
           },
           data: { endTime: now.toDate() },
         });
