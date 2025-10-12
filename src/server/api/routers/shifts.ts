@@ -18,7 +18,7 @@ export const ShiftRouter = createTRPCRouter({
             { OR: [{ endTime: null }, { endTime: { isSet: false } }] },
           ],
         },
-        include: { template: true },
+        include: { template: true, cashFund: true },
       });
       console.log("currentShift", currentShift);
       // 🟢 CASE 1: No shift at all → user can start immediately
@@ -31,10 +31,13 @@ export const ShiftRouter = createTRPCRouter({
       const { endHour } = currentShift.template;
 
       // Example: allow starting next shift if within 1 hour before its end
-      const isWithinNextShiftWindow = now.hour() + 1 >= endHour;
+      if (endHour > now.hour()) {
+        const isWithinNextShiftWindow =
+          endHour - now.hour() <= 1 || 24 - now.hour() + endHour <= 1;
 
-      // 🟢 CASE 2: Current shift is ending soon → allow early start
-      if (isWithinNextShiftWindow) return true;
+        // 🟢 CASE 2: Current shift is ending soon → allow early start
+        if (isWithinNextShiftWindow) return true;
+      }
 
       // 🔴 Otherwise, deny starting a new shift
       return false;
@@ -71,8 +74,11 @@ export const ShiftRouter = createTRPCRouter({
       });
 
       // 🕒 Check if within 1h before next shift
+
       const isWithinNextShiftWindow =
-        currentShift && now.hour() + 1 >= currentShift.template.endHour;
+        currentShift &&
+        (currentShift.template.endHour - now.hour() <= 1 ||
+          24 - now.hour() + currentShift.template.endHour <= 1);
 
       // ❌ Prevent user from starting multiple shifts
       if (
@@ -95,9 +101,8 @@ export const ShiftRouter = createTRPCRouter({
           },
           data: { endTime: now.toDate() },
         });
-
         // Create new shift
-        await tx.shift.create({
+        const createdShift = await tx.shift.create({
           data: {
             templateId: template.id,
             startTime: now.toDate(),
