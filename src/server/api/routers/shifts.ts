@@ -52,11 +52,25 @@ export const ShiftRouter = createTRPCRouter({
 
       // 🔴 Otherwise, deny starting a new shift
       return false;
-    } catch (err) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Get Current shift failed",
-      });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        // Now `err` is an `Error`
+        logger.error({ err: err.message }, "Error message");
+        // If using tRPC, rethrow or wrap in TRPCError
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: err.message,
+          cause: err,
+        });
+      } else {
+        // err is not an Error — handle fallback
+
+        logger.error({ err }, "Unknown error");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unknown error",
+        });
+      }
     }
   }),
   create: protectedProcedure
