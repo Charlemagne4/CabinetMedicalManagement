@@ -31,12 +31,22 @@ export const ShiftRouter = createTRPCRouter({
       // 2️⃣ Check if user can start next shift early
       const { endHour } = currentShift.template;
 
+      const currentHour = now.hour();
+      const shiftStartDay = dayjs(currentShift.startTime).startOf("day");
+      const currentDay = now.startOf("day");
+
+      // 🟢 CASE 2: It’s a new date → allow starting
+      if (!shiftStartDay.isSame(currentDay)) return true;
+
+      // 🟢 CASE 2: Shift already exceeded its template end → allow starting
+      if (currentHour >= endHour) return true;
+
       // Example: allow starting next shift if within 1 hour before its end
       if (endHour > now.hour()) {
         const isWithinNextShiftWindow =
           endHour - now.hour() <= 1 || 24 - now.hour() + endHour <= 1;
 
-        // 🟢 CASE 2: Current shift is ending soon → allow early start
+        // 🟢 CASE 3: Current shift is ending soon → allow early start
         if (isWithinNextShiftWindow) return true;
       }
 
@@ -74,6 +84,8 @@ export const ShiftRouter = createTRPCRouter({
         include: { template: true },
       });
 
+      const shiftStartDay = dayjs(currentShift?.startTime).startOf("day");
+      const currentDay = now.startOf("day");
       // 🕒 Check if within 1h before next shift
 
       const isWithinNextShiftWindow =
@@ -84,7 +96,8 @@ export const ShiftRouter = createTRPCRouter({
       // ❌ Prevent user from starting multiple shifts
       if (
         currentShift?.userId === session.user.id &&
-        !isWithinNextShiftWindow
+        !isWithinNextShiftWindow &&
+        shiftStartDay.isSame(currentDay)
       ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
