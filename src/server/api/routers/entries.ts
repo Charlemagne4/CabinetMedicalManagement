@@ -1,11 +1,11 @@
-import { prisma } from "../../../../prisma/prisma";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { ConsultationCreateSchema, DepenseCreateSchema } from "@/types/Entries";
 import type { Session } from "next-auth";
 import { getCurrentShift } from "@/modules/shifts/functions/StartShiftOnLogin";
-import type { Shift } from "@prisma/client";
+
+import { db } from "@/server/db";
 import { logger } from "@/utils/pino";
 
 const entrySchema = z.discriminatedUnion("type", [
@@ -28,50 +28,42 @@ export const entriesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input, ctx }) => {
-      try {
-        const { limit, cursor } = input;
-        const { id: userId } = ctx.session.user;
+      const { limit, cursor } = input;
+      const { id: userId } = ctx.session.user;
 
-        // console.log(userId);
-        if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+      logger.debug(userId);
+      // if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-        const data = await prisma.operation.findMany({
-          orderBy: [
-            { date: "desc" },
-            { id: "desc" }, // secondary key for stable ordering
-          ],
-          take: limit + 1, // fetch one extra to check if there's more
-          ...(cursor
+      const data = await db.operation.findMany({
+        orderBy: [
+          { date: "desc" },
+          { id: "desc" }, // secondary key for stable ordering
+        ],
+        take: limit + 1, // fetch one extra to check if there's more
+        ...(cursor
+          ? {
+              cursor: { date: cursor.date, id: cursor.id },
+              skip: 1,
+            }
+          : {}),
+      });
+
+      const hasMore = data.length > limit;
+      //remove last item if there is more data
+      const items = hasMore ? data.slice(0, -1) : data;
+      // set the next cursor to the last item if there is more data
+      const lastItem = items[items.length - 1];
+
+      return {
+        items,
+        nextCursor:
+          hasMore && lastItem
             ? {
-                cursor: { date: cursor.date, id: cursor.id },
-                skip: 1,
+                id: lastItem.id,
+                date: lastItem.date,
               }
-            : {}),
-        });
-
-        const hasMore = data.length > limit;
-        //remove last item if there is more data
-        const items = hasMore ? data.slice(0, -1) : data;
-        // set the next cursor to the last item if there is more data
-        const lastItem = items[items.length - 1];
-
-        return {
-          items,
-          nextCursor:
-            hasMore && lastItem
-              ? {
-                  id: lastItem.id,
-                  date: lastItem.date,
-                }
-              : null,
-        };
-      } catch (err) {
-        logger.error({ err }, "Registration error");
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Registration failed",
-        });
-      }
+            : null,
+      };
     }),
   create: protectedProcedure
     //TODO: Add shift id
@@ -103,7 +95,7 @@ async function addEntry(
   session: Pick<Session, "user">,
   shiftId: string,
 ) {
-  return await prisma.$transaction(async (tx) => {
+  return await db.$transaction(async (tx) => {
     //entering in Entry table
     let refId: string;
 

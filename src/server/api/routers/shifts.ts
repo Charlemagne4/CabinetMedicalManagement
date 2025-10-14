@@ -1,10 +1,10 @@
-import { prisma } from "../../../../prisma/prisma";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { ConsultationCreateSchema, DepenseCreateSchema } from "@/types/Entries";
 import dayjs from "dayjs";
 import { logger } from "@/utils/pino";
+import { db } from "@/server/db";
 
 export const ShiftRouter = createTRPCRouter({
   getCurrent: protectedProcedure.query(async ({ input, ctx }) => {
@@ -21,7 +21,7 @@ export const ShiftRouter = createTRPCRouter({
         },
         include: { template: true, cashFund: true },
       });
-      logger.info({ currentShift }, "current Shift");
+      logger.debug({ currentShift }, "current Shift");
       // 🟢 CASE 1: No shift at all → user can start immediately
       if (!currentShift) return true;
 
@@ -69,7 +69,7 @@ export const ShiftRouter = createTRPCRouter({
       const now = dayjs();
 
       // Find current shift template matching current time
-      const template = await prisma.shiftTemplate.findFirstOrThrow({
+      const template = await db.shiftTemplate.findFirstOrThrow({
         where: {
           startHour: { lte: now.hour() },
           endHour: { gte: now.hour() },
@@ -77,7 +77,7 @@ export const ShiftRouter = createTRPCRouter({
       });
 
       // Check if user already has an active shift
-      const currentShift = await prisma.shift.findFirst({
+      const currentShift = await db.shift.findFirst({
         where: {
           AND: [{ OR: [{ endTime: null }, { endTime: { isSet: false } }] }],
         },
@@ -106,7 +106,7 @@ export const ShiftRouter = createTRPCRouter({
       }
 
       // If we reach here, close old shifts & start a new one
-      await prisma.$transaction(async (tx) => {
+      await db.$transaction(async (tx) => {
         // Close any open shifts
         await tx.shift.updateMany({
           where: {

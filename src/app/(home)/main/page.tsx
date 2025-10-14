@@ -7,10 +7,7 @@ import { api, HydrateClient } from "@/trpc/server";
 export const dynamic = "force-dynamic";
 
 async function main() {
-  const session = await auth();
-  const shift = await getCurrentShift();
   void api.entries.getMany.prefetchInfinite({
-    userId: session?.user.id,
     limit: DEFAULT_LIMIT,
   });
 
