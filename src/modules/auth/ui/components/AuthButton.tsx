@@ -22,6 +22,7 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DarkModeToggler } from "@/components/DarkModeToggler";
 import { USER_IMAGE_FALLBACK } from "@/constants";
+import { logger } from "@/utils/pino";
 
 function AuthButtonSkeleton() {
   return (
@@ -38,7 +39,7 @@ function AuthButton() {
   if (status === "loading") return <AuthButtonSkeleton />;
   //TODO: make the signin button redirect to initial Page
   if (status === "unauthenticated") {
-    console.log("unauthenticated:", session);
+    logger.debug(`unauthenticated: ${session}`);
     // logger.debug(`user Role: ${session}`);
     // logger.debug(`user ID: ${session}`);
     // logger.debug(`user email: ${session}`);
@@ -56,7 +57,7 @@ function AuthButton() {
   }
 
   if (status === "authenticated") {
-    console.log(session);
+    logger.debug(session);
     // logger.debug(`user Role${session.user.role}`);
     // logger.debug(`user ID: ${session?.user.id}`);
     // logger.debug(`user email: ${session?.user.email}`);

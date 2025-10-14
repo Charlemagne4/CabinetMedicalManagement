@@ -6,6 +6,7 @@ import { ConsultationCreateSchema, DepenseCreateSchema } from "@/types/Entries";
 import type { Session } from "next-auth";
 import { getCurrentShift } from "@/modules/shifts/functions/StartShiftOnLogin";
 import type { Shift } from "@prisma/client";
+import { logger } from "@/utils/pino";
 
 const entrySchema = z.discriminatedUnion("type", [
   DepenseCreateSchema.extend({ type: z.literal("DEPENSE") }),
@@ -65,7 +66,7 @@ export const entriesRouter = createTRPCRouter({
               : null,
         };
       } catch (err) {
-        console.error("Registration error:", err);
+        logger.error({ err }, "Registration error");
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Registration failed",

@@ -12,6 +12,7 @@ import { db } from "@/server/db";
 import { prisma } from "prisma/prisma";
 import { comparePasswords } from "@/utils/passwordHasher";
 import { signInFormSchema } from "@/modules/auth/ui/components/MyForm/Schema";
+import { logger } from "@/utils/pino";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -80,14 +81,7 @@ export const authConfig = {
           // logger.warn("Missing credentials or user data during login attempt");
           return null;
         }
-        console.log("AAAAA");
-        // logger.debug(
-        //   await comparePasswords({
-        //     hashedPassword: user.password,
-        //     password,
-        //     salt: user.salt,
-        //   }),
-        // );
+        logger.debug({ comparePasswords }, "result of pw comparaison");
 
         if (
           await comparePasswords({

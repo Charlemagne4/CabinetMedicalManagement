@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { generateSalt, hashPassword } from "@/utils/passwordHasher";
 import { createTRPCRouter, publicProcedure } from "../trpc";
+import { logger } from "@/utils/pino";
 
 export const usersRouter = createTRPCRouter({
   register: publicProcedure
@@ -34,7 +35,7 @@ export const usersRouter = createTRPCRouter({
 
         return { success: true };
       } catch (err) {
-        console.error("Registration error:", err);
+        logger.error({ err }, "Registration error");
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Registration failed",

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { ConsultationCreateSchema, DepenseCreateSchema } from "@/types/Entries";
 import dayjs from "dayjs";
+import { logger } from "@/utils/pino";
 
 export const ShiftRouter = createTRPCRouter({
   getCurrent: protectedProcedure.query(async ({ input, ctx }) => {
@@ -20,7 +21,7 @@ export const ShiftRouter = createTRPCRouter({
         },
         include: { template: true, cashFund: true },
       });
-      console.log("currentShift", currentShift);
+      logger.info({ currentShift }, "current Shift");
       // 🟢 CASE 1: No shift at all → user can start immediately
       if (!currentShift) return true;
 
