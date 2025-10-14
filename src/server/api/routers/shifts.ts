@@ -25,7 +25,7 @@ export const ShiftRouter = createTRPCRouter({
       // 🟢 CASE 1: No shift at all → user can start immediately
       if (!currentShift) return true;
 
-      // 🟢 CASE 1.5: No shift at all → user can start immediately
+      // 🟢 CASE 1.5: if a user can do 2 shifts in one day
       // if (currentShift.userId === ctx.session.user.id) return false;
 
       // 2️⃣ Check if user can start next shift early

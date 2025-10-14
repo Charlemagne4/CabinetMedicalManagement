@@ -30,11 +30,19 @@ export const entriesRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const { limit, cursor } = input;
       const { id: userId } = ctx.session.user;
+      const currentShift = await getCurrentShift();
+
+      if (!currentShift)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "no shift active",
+        });
 
       logger.debug(userId);
       // if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
       const data = await db.operation.findMany({
+        where: { shiftId: currentShift.id },
         orderBy: [
           { date: "desc" },
           { id: "desc" }, // secondary key for stable ordering

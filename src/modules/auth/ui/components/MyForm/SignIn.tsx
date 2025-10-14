@@ -2,12 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { type z } from "zod";
 import { Form } from "@/components/ui/form";
 import MyForm from "./MyForm";
 import { signInFormSchema as formSchema } from "./Schema";
 import { useEffect, useState } from "react";
-import { redirect, useSearchParams } from "next/navigation";
+import { redirect, useRouter, useSearchParams } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 // import { logger } from "@/utils/pino";
@@ -18,12 +18,12 @@ import { Button } from "@/components/ui/button";
 
 export function SignIn() {
   const searchParams = useSearchParams();
-
+  const router = useRouter();
   // Safely get callbackUrl from the query parameters
 
   const { data: session, status } = useSession();
   if (session) {
-    redirect("/");
+    router.back();
   }
   const [error, setError] = useState<string>();
   const callbackUrl = decodeURIComponent(
@@ -57,7 +57,7 @@ export function SignIn() {
       const res = await signIn("credentials", {
         email: values.email,
         password: values.password,
-        redirectTo: "http://localhost:3000/main",
+        redirectTo: callbackUrl,
       });
     } catch (err) {
       // logger.error(err);
