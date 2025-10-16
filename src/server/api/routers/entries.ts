@@ -32,11 +32,7 @@ export const entriesRouter = createTRPCRouter({
       const { id: userId } = ctx.session.user;
       const currentShift = await getCurrentShift();
 
-      if (!currentShift)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "no shift active",
-        });
+      if (!currentShift) return { items: [], reason: "NO_ACTIVE_SHIFT" };
 
       logger.debug(userId);
       // if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });

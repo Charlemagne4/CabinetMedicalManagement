@@ -62,20 +62,74 @@ async function getShiftTemplateForNow() {
 //   return { ...shift, continueShiftRequest: false };
 // }
 
+// export async function getCurrentShift() {
+//   const now = dayjs();
+
+//   const currentShift = await prisma.shift.findFirst({
+//     where: {
+//       startTime: { lte: now.toDate() }, // started already
+//       OR: [
+//         { endTime: null }, // not finished
+//         { endTime: { isSet: false } }, // not finished
+//         { endTime: { gt: now.toDate() } }, // still active
+//       ],
+//     },
+//     include: { template: true, cashFund: true },
+//     orderBy: { startTime: "desc" },
+//   });
+//   return currentShift;
+// }
+
 export async function getCurrentShift() {
   const now = dayjs();
+  const nowDate = now.toDate();
+  const midnightToday = now.startOf("day").toDate();
+
+  // How far back we will allow the “normal mode” startTime
+  const maxLookbackHours = 12;
+  const earliestAllowed = now.subtract(maxLookbackHours, "hour").toDate();
 
   const currentShift = await prisma.shift.findFirst({
     where: {
-      startTime: { lte: now.toDate() }, // started already
-      OR: [
-        { endTime: null }, // not finished
-        { endTime: { isSet: false } }, // not finished
-        { endTime: { gt: now.toDate() } }, // still active
+      AND: [
+        // Must have started already
+        { startTime: { lte: nowDate } },
+
+        // Must match either “normal ongoing shift” OR “overnight crossing” shift
+        {
+          OR: [
+            // — Normal ongoing shift mode —
+            {
+              AND: [
+                { startTime: { gte: earliestAllowed } },
+                {
+                  OR: [
+                    { endTime: null },
+                    { endTime: { isSet: false } }, // keep your original branch
+                    { endTime: { gt: nowDate } },
+                  ],
+                },
+              ],
+            },
+            // — Overnight crossing mode —
+            // {
+            //   AND: [
+            //     { startTime: { lt: midnightToday } },
+            //     {
+            //       OR: [
+            //         { endTime: { isSet: false } }, // if endTime is not set, still consider
+            //         { endTime: { gt: midnightToday } }, // end after midnight
+            //       ],
+            //     },
+            //   ],
+            // },
+          ],
+        },
       ],
     },
-    include: { template: true },
+    include: { template: true, cashFund: true },
     orderBy: { startTime: "desc" },
   });
+
   return currentShift;
 }

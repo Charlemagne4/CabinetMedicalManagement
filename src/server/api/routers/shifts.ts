@@ -1,57 +1,19 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { ConsultationCreateSchema, DepenseCreateSchema } from "@/types/Entries";
 import dayjs from "dayjs";
 import { logger } from "@/utils/pino";
 import { db } from "@/server/db";
+import { getCurrentShift } from "@/modules/shifts/functions/StartShiftOnLogin";
+import { canStartNewShift } from "@/modules/shifts/functions/canStartNewShift";
 
 export const ShiftRouter = createTRPCRouter({
   getCurrent: protectedProcedure.query(async ({ input, ctx }) => {
     try {
-      const now = dayjs();
-
-      // 1️⃣ Check if the user already has an active or ongoing shift
-      const currentShift = await ctx.db.shift.findFirst({
-        where: {
-          AND: [
-            { startTime: { lte: now.toDate() } },
-            { OR: [{ endTime: null }, { endTime: { isSet: false } }] },
-          ],
-        },
-        include: { template: true, cashFund: true },
-      });
+      const currentShift = await getCurrentShift();
       logger.debug({ currentShift }, "current Shift");
-      // 🟢 CASE 1: No shift at all → user can start immediately
-      if (!currentShift) return true;
 
-      // 🟢 CASE 1.5: if a user can do 2 shifts in one day
-      // if (currentShift.userId === ctx.session.user.id) return false;
-
-      // 2️⃣ Check if user can start next shift early
-      const { endHour } = currentShift.template;
-
-      const currentHour = now.hour();
-      const shiftStartDay = dayjs(currentShift.startTime).startOf("day");
-      const currentDay = now.startOf("day");
-
-      // 🟢 CASE 2: It’s a new date → allow starting
-      if (!shiftStartDay.isSame(currentDay)) return true;
-
-      // 🟢 CASE 2: Shift already exceeded its template end → allow starting
-      if (currentHour >= endHour) return true;
-
-      // Example: allow starting next shift if within 1 hour before its end
-      if (endHour > now.hour()) {
-        const isWithinNextShiftWindow =
-          endHour - now.hour() <= 1 || 24 - now.hour() + endHour <= 1;
-
-        // 🟢 CASE 3: Current shift is ending soon → allow early start
-        if (isWithinNextShiftWindow) return true;
-      }
-
-      // 🔴 Otherwise, deny starting a new shift
-      return false;
+      return canStartNewShift(currentShift);
     } catch (err: unknown) {
       if (err instanceof Error) {
         // Now `err` is an `Error`
