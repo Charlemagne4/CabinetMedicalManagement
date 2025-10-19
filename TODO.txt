@@ -6,11 +6,11 @@ depenses ✅
 -------------------------------------
 WIP: 
 affichage par mois et date d'ajout 
-affichage en depends des equipes matin ou soir avec medecin tout visible 
+affichage en depends des equipes mat/soir avec medecin tout visible ✅
 choix entre consultation ou bilan 
 system de credit
-UI du medecin
-UI du telephone 
+UI du medecin ✅
+UI du telephone ✅
 dashboard 
 work in progress in "/"
 startShift and endShift function 
