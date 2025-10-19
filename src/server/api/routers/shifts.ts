@@ -31,6 +31,7 @@ export const ShiftRouter = createTRPCRouter({
           user: true,
           template: true,
           Operations: {
+            include: { user: true },
             orderBy: {
               date: "desc", // or whatever field you want
             },

@@ -12,6 +12,8 @@ import { logger } from "@/utils/pino";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import OperationRow from "../components/ui/OperationRow";
+import { DataTable } from "../components/ui/DataTable";
+import { columns } from "../components/ui/Columns";
 
 function AdminOperationsSection() {
   return (
@@ -48,9 +50,11 @@ function AdminOperationsSectionSuspense() {
                 {shift.startTime.toDateString()} -{shift.recettes?.totalAmount}
               </AccordionTrigger>
               <AccordionContent className="flex flex-col gap-4 text-balance">
-                {shift.Operations.map((operation) => (
-                  <OperationRow entry={operation} key={operation.id} />
-                ))}
+                {shift.Operations.length === 0 ? (
+                  <p> No operations in this shift</p>
+                ) : (
+                  <DataTable columns={columns} data={shift.Operations} />
+                )}
               </AccordionContent>
             </AccordionItem>
           ))
