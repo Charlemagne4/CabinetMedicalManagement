@@ -93,7 +93,7 @@ model Shift {
 
     cashFund      CashFund?
     consultations Consultation[]
-    recettes      Recette[]
+    recettes      Recette?
     expenses      Depense[]
     Operations    Operation[]
 }
@@ -123,7 +123,7 @@ model Recette {
     id          String   @id @default(auto()) @map("_id") @db.ObjectId
     date        DateTime @default(now())
     totalAmount Float
-    shiftId     String   @db.ObjectId
+    shiftId     String   @unique @db.ObjectId
     Shift       Shift    @relation(fields: [shiftId], references: [id])
 }
 

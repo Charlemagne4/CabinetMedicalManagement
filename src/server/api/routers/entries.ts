@@ -88,7 +88,12 @@ export const entriesRouter = createTRPCRouter({
           message: "no shift active",
         });
 
-      await addEntry(entry, session, currentShift?.id);
+      await addEntry(
+        entry,
+        session,
+        currentShift?.id,
+        currentShift.recettes?.id,
+      );
 
       return true;
     }),
@@ -98,6 +103,7 @@ async function addEntry(
   entry: z.infer<typeof entrySchema>,
   session: Pick<Session, "user">,
   shiftId: string,
+  currentRecettesId: string | undefined,
 ) {
   return await db.$transaction(async (tx) => {
     //entering in Entry table
@@ -147,9 +153,10 @@ async function addEntry(
         // other common fields if needed
       },
     });
-
+    logger.debug(currentRecettesId);
     //deduct or add amount
     const recette = await tx.recette.updateMany({
+      where: { id: currentRecettesId },
       data: {
         totalAmount:
           entry.type === "CONSULTATION"

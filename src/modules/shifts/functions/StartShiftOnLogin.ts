@@ -127,7 +127,7 @@ export async function getCurrentShift() {
         },
       ],
     },
-    include: { template: true, cashFund: true },
+    include: { template: true, cashFund: true, recettes: true },
     orderBy: { startTime: "desc" },
   });
 

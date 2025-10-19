@@ -13,6 +13,7 @@ import { prisma } from "prisma/prisma";
 import { comparePasswords } from "@/utils/passwordHasher";
 import { signInFormSchema } from "@/modules/auth/ui/components/MyForm/Schema";
 import { logger } from "@/utils/pino";
+import type { Role } from "@prisma/client";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -27,12 +28,12 @@ declare module "next-auth" {
       name?: string;
       email?: string;
       image?: string;
-      role: string;
+      role: Role;
     };
   }
 
   interface User {
-    role?: string;
+    role?: Role;
     id?: string;
   }
 }
@@ -40,7 +41,7 @@ declare module "next-auth" {
 declare module "next-auth" {
   interface JWT {
     id?: string;
-    role?: string; // Allow role to be any string
+    role?: Role; // Allow role to be any string
   }
 }
 

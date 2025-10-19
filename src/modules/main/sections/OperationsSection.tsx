@@ -35,10 +35,9 @@ function OperationsSectionSuspense() {
 
   return (
     <div>
-      <div className="flex flex-col gap-2">
-        <div className="grid grid-cols-4">
+      <div className="flex flex-col gap-2 md:w-[70vw]">
+        <div className="grid grid-cols-4 gap-x-4 border-b py-2">
           <div>{"Entrée"}</div>
-
           <div>{"Montant"}</div>
           <div>{"date"}</div>
           <div>{"userId"}</div>

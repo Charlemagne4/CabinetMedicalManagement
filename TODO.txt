@@ -1,12 +1,19 @@
-CRUD: (matin + soir) 8h 16h
-fond de caisse inital
-recette par jour 
-consultation
-bilan 
-depenses 
-credit 
-
-
+CRUD: (matin + soir) 8h 16h 
+fond de caisse inital ✅
+recette par jour ✅
+consultation ✅
+depenses ✅
+-------------------------------------
+WIP: 
 affichage par mois et date d'ajout 
-affichage en depends des equipes matin ou soir avec medecin tout visible
-
+affichage en depends des equipes matin ou soir avec medecin tout visible 
+choix entre consultation ou bilan 
+system de credit
+UI du medecin
+UI du telephone 
+dashboard 
+work in progress in "/"
+startShift and endShift function 
+shift ends depending on template.endhour
+Dark mode/light mode check with the custom colors 
+update auth when logged in maybe ?
