@@ -7,6 +7,8 @@ import { Suspense } from "react";
 
 import { ErrorBoundary } from "react-error-boundary";
 import OperationRow from "../components/ui/OperationRow";
+import { DataTable } from "../components/ui/DataTable";
+import { columns } from "../components/ui/Columns";
 
 function OperationsSection() {
   return (
@@ -32,10 +34,10 @@ function OperationsSectionSuspense() {
   }
 
   const items = entries.pages.flatMap((page) => page.items);
-
   return (
     <div>
-      <div className="flex flex-col gap-2 md:w-[70vw]">
+      <DataTable columns={columns} data={items} />
+      {/* <div className="flex flex-col gap-2 md:w-[70vw]">
         <div className="grid grid-cols-4 gap-x-4 border-b py-2">
           <div>{"Entrée"}</div>
           <div>{"Montant"}</div>
@@ -49,7 +51,7 @@ function OperationsSectionSuspense() {
         ) : (
           items.map((entry) => <OperationRow key={entry.id} entry={entry} />)
         )}
-      </div>
+      </div> */}
       <InfiniteScroll isManual={false} {...query} />
     </div>
   );
