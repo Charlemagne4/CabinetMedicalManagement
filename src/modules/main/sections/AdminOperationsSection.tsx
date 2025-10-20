@@ -8,12 +8,9 @@ import {
 } from "@/components/ui/accordion";
 import { DEFAULT_LIMIT } from "@/constants";
 import { api } from "@/trpc/react";
-import { logger } from "@/utils/pino";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import OperationRow from "../components/ui/OperationRow";
-import { DataTable } from "../components/ui/DataTable";
-import { columns } from "../components/ui/Columns";
+import AdminDataTable from "../components/AdminDataTable";
 
 function AdminOperationsSection() {
   return (
@@ -47,14 +44,47 @@ function AdminOperationsSectionSuspense() {
           items.map((shift) => (
             <AccordionItem value={shift.id} key={shift.id}>
               <AccordionTrigger>
-                {shift.startTime.toDateString()} -{shift.recettes?.totalAmount}
+                <div className="flex w-full justify-between text-sm">
+                  <span>
+                    {shift.template.name} — {shift.user.name}
+                  </span>
+                  <span>
+                    {shift.startTime.toLocaleDateString("fr-FR")} |{" "}
+                    {shift.recettes?.totalAmount?.toLocaleString("fr-FR")} DA
+                  </span>
+                </div>
               </AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-4 text-balance">
-                {shift.Operations.length === 0 ? (
-                  <p> No operations in this shift</p>
-                ) : (
-                  <DataTable columns={columns} data={shift.Operations} />
-                )}
+
+              <AccordionContent className="space-y-4 p-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <p>
+                    <strong>Début :</strong>{" "}
+                    {shift.startTime.toLocaleString("fr-FR")}
+                  </p>
+                  <p>
+                    <strong>Fin :</strong>{" "}
+                    {shift.endTime
+                      ? shift.endTime.toLocaleString("fr-FR")
+                      : "En cours"}
+                  </p>
+                  <p>
+                    <strong>Employé :</strong> {shift.user.name}
+                  </p>
+                  <p>
+                    <strong>Fond de caisse :</strong>{" "}
+                    {shift.cashFund?.amount ?? 0} DA
+                  </p>
+                  <p>
+                    <strong>Recettes :</strong>{" "}
+                    {shift.recettes?.totalAmount ?? 0} DA
+                  </p>
+                  <p>
+                    <strong>Dépenses :</strong>{" "}
+                    {shift.expenses?.reduce((a, e) => a + e.amount, 0) ?? 0} DA
+                  </p>
+                </div>
+
+                <AdminDataTable shift={shift} query={query} />
               </AccordionContent>
             </AccordionItem>
           ))

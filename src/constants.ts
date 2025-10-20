@@ -1,6 +1,6 @@
 import { env } from "src/env";
 
-export const DEFAULT_LIMIT = 5;
+export const DEFAULT_LIMIT = 100;
 
 export const THUMBNAIL_FALLBACK = "/placeholder.svg";
 

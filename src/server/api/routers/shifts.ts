@@ -6,8 +6,63 @@ import { logger } from "@/utils/pino";
 import { db } from "@/server/db";
 import { getCurrentShift } from "@/modules/shifts/functions/StartShiftOnLogin";
 import { canStartNewShift } from "@/modules/shifts/functions/canStartNewShift";
+import { DEFAULT_LIMIT } from "@/constants";
 
 export const ShiftRouter = createTRPCRouter({
+  // 2️⃣ Get all operations of one shift (with pagination)
+  getShiftOperations: protectedProcedure
+    .input(
+      z.object({
+        shiftId: z.string(),
+        limit: z.number().min(1).max(100).default(DEFAULT_LIMIT),
+        cursor: z
+          .object({
+            id: z.string(),
+            date: z.date(),
+          })
+          .nullish(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { shiftId, limit, cursor } = input;
+
+      const data = await db.operation.findMany({
+        where: { shiftId },
+        include: {
+          user: {
+            select: { name: true, role: true, email: true, id: true },
+          },
+        },
+        orderBy: [
+          { date: "desc" },
+          { id: "desc" }, // secondary key for stable ordering
+        ],
+        take: limit + 1, // fetch one extra to check if there's more
+        ...(cursor
+          ? {
+              cursor: { date: cursor.date, id: cursor.id },
+              skip: 1,
+            }
+          : {}),
+      });
+
+      const hasMore = data.length > limit;
+      //remove last item if there is more data
+      const items = hasMore ? data.slice(0, -1) : data;
+      // set the next cursor to the last item if there is more data
+      const lastItem = items[items.length - 1];
+
+      return {
+        items,
+        nextCursor:
+          hasMore && lastItem
+            ? {
+                id: lastItem.id,
+                date: lastItem.date,
+              }
+            : null,
+      };
+    }),
   getMany: protectedProcedure
     .input(
       z.object({
@@ -28,13 +83,19 @@ export const ShiftRouter = createTRPCRouter({
         include: {
           cashFund: true,
           recettes: true,
+          expenses: true,
           user: true,
           template: true,
           Operations: {
-            include: { user: true },
+            include: {
+              user: {
+                select: { name: true, role: true, email: true, id: true },
+              },
+            },
             orderBy: {
               date: "desc", // or whatever field you want
             },
+            take: limit + 1,
           },
         },
         orderBy: [

@@ -69,9 +69,6 @@ function ConsultationForm() {
         )}
       </div>
 
-      {/* shiftId est caché car déjà fourni */}
-      <input type="hidden" {...register("shiftId")} />
-
       <Button type="submit" disabled={isSubmitting || create.isPending}>
         {isSubmitting || create.isPending ? "Ajout..." : "Ajouter"}
       </Button>

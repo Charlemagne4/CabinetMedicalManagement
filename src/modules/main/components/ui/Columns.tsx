@@ -16,12 +16,14 @@ import { cn } from "@/lib/utils";
 import { logger } from "@/utils/pino";
 import type { EntryType, Prisma } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from "lucide-react";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
 export type entry = Prisma.OperationGetPayload<{
-  include: { user: true };
+  include: {
+    user: { select: { name: true; role: true; email: true; id: true } };
+  };
 }>;
 
 // export type entry = {
@@ -43,15 +45,22 @@ export const columns: ColumnDef<entry>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Entrée
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
         </Button>
       );
     },
     cell: ({ row }) => {
-      const entryType: EntryType = row.getValue("type");
-      const entryLabel: string = row.getValue("label");
+      const entry = row.original;
+      const entryType: EntryType = entry.type;
+      const entryLabel: string = entry.label;
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 truncate">
           <span className="truncate">{entryLabel}</span>
           <p
             className={cn(
@@ -75,7 +84,13 @@ export const columns: ColumnDef<entry>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Montant
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
         </Button>
       );
     },
@@ -110,7 +125,13 @@ export const columns: ColumnDef<entry>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
         </Button>
       );
     },
@@ -129,7 +150,13 @@ export const columns: ColumnDef<entry>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Utilisateur
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
         </Button>
       );
     },
@@ -138,11 +165,6 @@ export const columns: ColumnDef<entry>[] = [
       logger.debug(entry);
       return <div className="truncate">{entry.user?.name}</div>;
     },
-  },
-  {
-    accessorKey: "type",
-    header: undefined,
-    cell: undefined,
   },
   {
     id: "action",

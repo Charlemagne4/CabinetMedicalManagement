@@ -32,13 +32,17 @@ import { Input } from "@/components/ui/input";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import type { InfiniteScrollProps } from "@/components/InfiniteScroll";
+import InfiniteScroll from "@/components/InfiniteScroll";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  InfiniteScrollProps: InfiniteScrollProps;
 }
 
 export function DataTable<TData, TValue>({
+  InfiniteScrollProps,
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -69,7 +73,7 @@ export function DataTable<TData, TValue>({
     <div className="overflow-hidden rounded-md border">
       <div className="m-2 flex w-[70vw] items-center overflow-hidden rounded-md py-4">
         <Input
-          placeholder="Filter emails..."
+          placeholder="Filtrez entrée..."
           value={(table.getColumn("label")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("label")?.setFilterValue(event.target.value)
@@ -111,7 +115,7 @@ export function DataTable<TData, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead align="left" key={header.id}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -132,7 +136,7 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell align="left" key={cell.id} className="w-[80%]">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
@@ -153,6 +157,7 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
+        <InfiniteScroll isManual {...InfiniteScrollProps} />
       </div>
       {/* <div className="text-muted-foreground flex-1 text-sm">
         {table.getFilteredSelectedRowModel().rows.length} of{" "}

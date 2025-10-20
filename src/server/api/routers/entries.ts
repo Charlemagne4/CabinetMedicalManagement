@@ -39,7 +39,11 @@ export const entriesRouter = createTRPCRouter({
 
       const data = await db.operation.findMany({
         where: { shiftId: currentShift.id },
-        include: { user: true },
+        include: {
+          user: {
+            select: { name: true, role: true, email: true, id: true },
+          },
+        },
         orderBy: [
           { date: "desc" },
           { id: "desc" }, // secondary key for stable ordering

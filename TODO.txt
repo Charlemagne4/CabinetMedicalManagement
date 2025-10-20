@@ -19,3 +19,4 @@ Dark mode/light mode check with the custom colors
 update auth when logged in maybe ?
 rate limiting
 badge for types of entries in main instead if colored divs
+check include user true in api

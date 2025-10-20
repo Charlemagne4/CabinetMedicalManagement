@@ -9,6 +9,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import OperationRow from "../components/ui/OperationRow";
 import { DataTable } from "../components/ui/DataTable";
 import { columns } from "../components/ui/Columns";
+import { logger } from "@/utils/pino";
 
 function OperationsSection() {
   return (
@@ -34,9 +35,10 @@ function OperationsSectionSuspense() {
   }
 
   const items = entries.pages.flatMap((page) => page.items);
+  logger.warn(items);
   return (
     <div>
-      <DataTable columns={columns} data={items} />
+      <DataTable columns={columns} data={items} InfiniteScrollProps={query} />
       {/* <div className="flex flex-col gap-2 md:w-[70vw]">
         <div className="grid grid-cols-4 gap-x-4 border-b py-2">
           <div>{"Entrée"}</div>
@@ -52,7 +54,6 @@ function OperationsSectionSuspense() {
           items.map((entry) => <OperationRow key={entry.id} entry={entry} />)
         )}
       </div> */}
-      <InfiniteScroll isManual={false} {...query} />
     </div>
   );
 }

@@ -23,6 +23,7 @@ function StartShiftModal() {
     onSuccess: async () => {
       toast.success("Shift créé !");
       await utils.entries.invalidate();
+      await utils.shifts.getCurrent.invalidate();
       setShiftStartModalOpen(false);
       setCashFund("");
     },

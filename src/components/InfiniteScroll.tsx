@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Button } from "./ui/button";
 import useIntersactionObserver from "@/hooks/useIntersactionObserver";
 
-interface InfiniteScrollProps {
+export interface InfiniteScrollProps {
   isManual?: boolean;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
