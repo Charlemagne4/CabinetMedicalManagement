@@ -7,6 +7,7 @@ import { getCurrentShift } from "@/modules/shifts/functions/StartShiftOnLogin";
 
 import { db } from "@/server/db";
 import { logger } from "@/utils/pino";
+import { now } from "@/lib/daysjs";
 
 const entrySchema = z.discriminatedUnion("type", [
   DepenseCreateSchema.extend({ type: z.literal("DEPENSE") }),
@@ -118,6 +119,7 @@ async function addEntry(
       case "CONSULTATION": {
         const consultation = await tx.consultation.create({
           data: {
+            date: now.toDate(),
             shiftId,
             amount: entry.amount,
             patient: entry.patient,
@@ -130,6 +132,7 @@ async function addEntry(
       case "DEPENSE": {
         const depense = await tx.depense.create({
           data: {
+            date: now.toDate(),
             shiftId,
             // map only depense-specific fields
             amount: entry.amount,

@@ -5,14 +5,14 @@ consultation ✅
 depenses ✅
 -------------------------------------
 WIP: 
-affichage par mois et date d'ajout 
+affichage par mois et date d'ajout ✅
 affichage en depends des equipes mat/soir avec medecin tout visible ✅
-choix entre consultation ou bilan 
-system de credit
 UI du medecin ✅
 UI du telephone ✅
+work in progress in "/" ✅
+choix entre consultation ou bilan 
+system de credit
 dashboard 
-work in progress in "/"
 startShift and endShift function 
 shift ends depending on template.endhour
 Dark mode/light mode check with the custom colors 
@@ -20,3 +20,5 @@ update auth when logged in maybe ?
 rate limiting
 badge for types of entries in main instead if colored divs
 check include user true in api
+search of individual datatable should query db 
+shift creation button invalidate getcurrent 

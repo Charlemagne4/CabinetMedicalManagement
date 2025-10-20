@@ -7,6 +7,7 @@ import { db } from "@/server/db";
 import { getCurrentShift } from "@/modules/shifts/functions/StartShiftOnLogin";
 import { canStartNewShift } from "@/modules/shifts/functions/canStartNewShift";
 import { DEFAULT_LIMIT } from "@/constants";
+import { now } from "@/lib/daysjs";
 
 export const ShiftRouter = createTRPCRouter({
   // 2️⃣ Get all operations of one shift (with pagination)
@@ -132,8 +133,9 @@ export const ShiftRouter = createTRPCRouter({
     try {
       const currentShift = await getCurrentShift();
       logger.debug({ currentShift }, "current Shift");
-
-      return canStartNewShift(currentShift);
+      const canStartNewShiftValue = canStartNewShift(currentShift);
+      logger.debug({ canStartNewShift }, "can start a new SHIFT ? ");
+      return canStartNewShiftValue;
     } catch (err: unknown) {
       if (err instanceof Error) {
         // Now `err` is an `Error`
@@ -162,29 +164,28 @@ export const ShiftRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { session } = ctx;
       const { cashfund } = input;
-      const now = dayjs();
       const currentHour = now.hour();
       const earlyHour = (currentHour + 1) % 24;
       logger.debug({ currentHour: currentHour });
 
       // Find current shift template matching current time
-      const template = await db.shiftTemplate.findFirstOrThrow({
-        where: {
-          OR: [
-            // Normal shifts (e.g. 08→16)
-            {
-              startHour: { lte: earlyHour },
-              endHour: { gte: currentHour },
-            },
-            // Overnight shifts (e.g. 22→6)
-            {
-              startHour: { gte: earlyHour },
-              endHour: { lte: currentHour },
-            },
-          ],
-        },
-      });
+      const templates = await db.shiftTemplate.findMany();
 
+      // Find which template matches current hour
+      const template = templates.find((template) => {
+        if (template.endHour > template.startHour) {
+          // Normal shift (ex: 8–16)
+          return (
+            currentHour >= template.startHour && currentHour < template.endHour
+          );
+        } else {
+          // Overnight shift (ex: 16–00)
+          return (
+            currentHour >= template.startHour || currentHour < template.endHour
+          );
+        }
+      });
+      if (!template) throw new TRPCError({ code: "CONFLICT" });
       // Check if user already has an active shift
       const currentShift = await getCurrentShift();
 

@@ -1,3 +1,4 @@
+import { now } from "@/lib/daysjs";
 import { db } from "@/server/db";
 import type { Prisma } from "@prisma/client";
 import dayjs from "dayjs";
@@ -7,29 +8,32 @@ type shift = Prisma.ShiftGetPayload<{
 }>;
 
 export function canStartNewShift(currentShift?: shift | null): boolean {
-  const now = dayjs();
-
-  // 🟢 CASE 1: No current shift → can start
   if (!currentShift) return true;
 
-  const { endHour } = currentShift.template;
+  const { endHour, startHour } = currentShift.template;
   const currentHour = now.hour();
 
-  const shiftStartDay = dayjs(currentShift.startTime).startOf("day");
-  const currentDay = now.startOf("day");
+  const shiftStartDay = dayjs(currentShift.startTime);
+  const currentDay = now;
 
-  // 🟢 CASE 2: It’s a new date → allow starting
+  // 🟢 CASE 1: It's a new calendar day → allow new shift
   if (!shiftStartDay.isSame(currentDay)) return true;
 
-  // 🟢 CASE 3: Shift already exceeded its template end → allow starting
-  if (currentHour >= endHour) return true;
+  // 🟢 CASE 2: Current time is past shift end (normal case)
+  if (startHour < endHour && currentHour >= endHour) return true;
 
-  // 🟢 CASE 4: Allow starting if within 1 hour of endHour (early start)
-  const isWithinNextShiftWindow =
-    endHour - currentHour <= 1 || 24 - currentHour + endHour <= 1;
+  // 🟢 CASE 3: Overnight shift (e.g. 16 → 0 or 20 → 4)
+  if (startHour > endHour) {
+    // If it's after midnight but before next day's endHour, still in shift
+    if (currentHour < endHour) return false;
+    // If it's after previous evening’s shift ended → can start
+    if (currentHour >= endHour && currentHour < startHour) return true;
+  }
 
-  if (isWithinNextShiftWindow) return true;
+  // 🟢 CASE 4: Within 1h before next shift → allow pre-start
+  const hoursUntilEnd =
+    endHour >= currentHour ? endHour - currentHour : 24 - currentHour + endHour;
+  if (hoursUntilEnd <= 1) return true;
 
-  // 🔴 Otherwise, deny
   return false;
 }
