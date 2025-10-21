@@ -201,13 +201,19 @@ export const ShiftRouter = createTRPCRouter({
 
       // If we reach here, close old shifts & start a new one
       await db.$transaction(async (tx) => {
+        // get the last operation in the shift
+        const lastOperation = await tx.operation.findFirst({
+          where: { shiftId: currentShift?.id },
+          orderBy: { date: "desc" },
+        });
+
         // Close any open shifts
         await tx.shift.updateMany({
           where: {
             id: currentShift?.id,
             AND: [{ OR: [{ endTime: null }, { endTime: { isSet: false } }] }],
           },
-          data: { endTime: now.toDate() },
+          data: { endTime: lastOperation?.date },
         });
         // Create new shift
         const createdShift = await tx.shift.create({

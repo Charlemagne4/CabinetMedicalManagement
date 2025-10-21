@@ -10,15 +10,15 @@ affichage en depends des equipes mat/soir avec medecin tout visible ✅
 UI du medecin ✅
 UI du telephone ✅
 work in progress in "/" ✅
+check include user true in api ✅
+shift ends depending on template.endhour (abandonned) ✅
+shift creation button invalidate getcurrent ✅
 choix entre consultation ou bilan 
 system de credit
 dashboard 
-startShift and endShift function 
-shift ends depending on template.endhour
+endShift function on logout but when a shift can be started 
 Dark mode/light mode check with the custom colors 
 update auth when logged in maybe ?
 rate limiting
 badge for types of entries in main instead if colored divs
-check include user true in api
 search of individual datatable should query db 
-shift creation button invalidate getcurrent 

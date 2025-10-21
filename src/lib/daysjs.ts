@@ -13,3 +13,4 @@ dayjs.tz.setDefault("Africa/Algiers");
 
 // Export a helper function instead of a constant
 export const now = dayjs.tz(); // 👈 This gives you the current real time
+// export const now = dayjs.tz("2025-10-22T7:30:00", "Africa/Algiers");
