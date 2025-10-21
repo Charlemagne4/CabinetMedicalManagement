@@ -151,6 +151,7 @@ async function addEntry(
     //entering in operation table
     const operation = await tx.operation.create({
       data: {
+        date: now.toDate(),
         shiftId,
         amount: entry.amount,
         type: entry.type,

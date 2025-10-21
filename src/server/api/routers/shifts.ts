@@ -4,7 +4,10 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import dayjs from "dayjs";
 import { logger } from "@/utils/pino";
 import { db } from "@/server/db";
-import { getCurrentShift } from "@/modules/shifts/functions/StartShiftOnLogin";
+import {
+  getCurrentShift,
+  getShiftTemplateForNow,
+} from "@/modules/shifts/functions/StartShiftOnLogin";
 import { canStartNewShift } from "@/modules/shifts/functions/canStartNewShift";
 import { DEFAULT_LIMIT } from "@/constants";
 import { now } from "@/lib/daysjs";
@@ -79,7 +82,8 @@ export const ShiftRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { limit, cursor } = input;
       const { db, session } = ctx;
-
+      // TODO: Remove after debug
+      await getShiftTemplateForNow();
       const data = await db.shift.findMany({
         include: {
           cashFund: true,
@@ -165,26 +169,11 @@ export const ShiftRouter = createTRPCRouter({
       const { session } = ctx;
       const { cashfund } = input;
       const currentHour = now.hour();
-      const earlyHour = (currentHour + 1) % 24;
       logger.debug({ currentHour: currentHour });
 
       // Find current shift template matching current time
-      const templates = await db.shiftTemplate.findMany();
+      const template = await getShiftTemplateForNow();
 
-      // Find which template matches current hour
-      const template = templates.find((template) => {
-        if (template.endHour > template.startHour) {
-          // Normal shift (ex: 8–16)
-          return (
-            currentHour >= template.startHour && currentHour < template.endHour
-          );
-        } else {
-          // Overnight shift (ex: 16–00)
-          return (
-            currentHour >= template.startHour || currentHour < template.endHour
-          );
-        }
-      });
       if (!template) throw new TRPCError({ code: "CONFLICT" });
       // Check if user already has an active shift
       const currentShift = await getCurrentShift();
@@ -227,7 +216,7 @@ export const ShiftRouter = createTRPCRouter({
             startTime: now.toDate(),
             userId: session.user.id,
             cashFund: { create: { amount: cashfund } },
-            recettes: { create: { totalAmount: 0 } },
+            recettes: { create: { totalAmount: 0, date: now.toDate() } },
           },
         });
         logger.debug(createdShift);

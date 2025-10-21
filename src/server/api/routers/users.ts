@@ -4,6 +4,7 @@ import { z } from "zod";
 import { generateSalt, hashPassword } from "@/utils/passwordHasher";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { logger } from "@/utils/pino";
+import { now } from "@/lib/daysjs";
 
 export const usersRouter = createTRPCRouter({
   register: publicProcedure
@@ -30,7 +31,13 @@ export const usersRouter = createTRPCRouter({
         const hashed = await hashPassword(password, salt);
 
         await prisma.user.create({
-          data: { email, password: hashed, name: username, salt },
+          data: {
+            email,
+            password: hashed,
+            name: username,
+            salt,
+            createdAt: now.toDate(),
+          },
         });
 
         return { success: true };

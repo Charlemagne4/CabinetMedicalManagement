@@ -82,6 +82,8 @@
     "superjson": "^2.2.1",
     "tailwind-merge": "^3.3.1",
     "thread-stream": "^3.1.0",
+    "timezone": "^1.0.23",
+    "utc": "^0.1.0",
     "vaul": "^1.1.2",
     "zod": "^3.25.76"
   },

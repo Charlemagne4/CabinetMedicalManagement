@@ -5,29 +5,34 @@ import { db } from "@/server/db";
 import { now } from "@/lib/daysjs";
 
 // // helper: get the template based on current hour
-// async function getShiftTemplateForNow() {
-//   const hour = now.hour();
 
-//   // find template in DB that matches this hour
-//   const template = await prisma.shiftTemplate.findFirst({
-//     where: {
-//       startHour: { lte: hour },
-//       endHour: { gt: hour },
-//     },
-//   });
+export async function getShiftTemplateForNow() {
+  const templates = await db.shiftTemplate.findMany();
+  const currentHour = now.hour();
+  const currentMinute = now.minute();
+  const currentTimeInHours = currentHour + currentMinute / 60;
 
-//   // if it's a night shift crossing midnight (e.g. 16 → 0), handle wrap-around
-//   if (!template) {
-//     return await prisma.shiftTemplate.findFirst({
-//       where: {
-//         startHour: { gt: hour },
-//         endHour: 0, // meaning ends at midnight or wraps
-//       },
-//     });
-//   }
+  // Adjusted time rule: within 1 hour before next shift = counts as next shift
+  const adjustedTime =
+    currentTimeInHours + 1 >= 24
+      ? currentTimeInHours + 1 - 24
+      : currentTimeInHours + 1;
 
-//   return template;
-// }
+  const template = templates.find((template) => {
+    const { startHour, endHour } = template;
+
+    if (endHour > startHour) {
+      // Normal shift (e.g. 8–16)
+      return adjustedTime >= startHour && adjustedTime < endHour;
+    } else {
+      // Overnight shift (e.g. 16–00 or 00–8)
+      return adjustedTime >= startHour || adjustedTime < endHour;
+    }
+  });
+
+  logger.debug({ template }, "current template");
+  return template ?? null;
+}
 
 // export async function startShiftOnLogin(userId: string) {
 //   const now = dayjs();
@@ -83,48 +88,57 @@ import { now } from "@/lib/daysjs";
 
 export async function getCurrentShift() {
   const currentHour = now.hour();
+  const currentDate = now.toDate();
+  const midnightToday = now.startOf("day").toDate();
 
-  // Fetch shift templates (8–16 and 16–00)
-  const templates = await prisma.shiftTemplate.findMany();
-
-  // Find which template matches current hour
-  const currentTemplate = templates.find((template) => {
-    if (template.endHour > template.startHour) {
-      // Normal shift (ex: 8–16)
-      return (
-        currentHour >= template.startHour && currentHour < template.endHour
-      );
-    } else {
-      // Overnight shift (ex: 16–00)
-      return (
-        currentHour >= template.startHour || currentHour < template.endHour
-      );
-    }
+  // 🟢 STEP 1: Find any shift that started today (or late last night) and is still open
+  const ongoingShift = await prisma.shift.findFirst({
+    where: {
+      OR: [
+        // started today and not ended
+        {
+          startTime: { gte: midnightToday },
+          OR: [{ endTime: null }, { endTime: { isSet: false } }],
+        },
+        // OR started yesterday (for overnight shifts)
+        {
+          startTime: { gte: dayjs(midnightToday).subtract(1, "day").toDate() },
+          OR: [{ endTime: null }, { endTime: { isSet: false } }],
+        },
+      ],
+    },
+    include: {
+      user: true,
+      template: true,
+      recettes: true,
+      cashFund: true,
+    },
+    orderBy: { startTime: "desc" },
   });
-  logger.debug(currentTemplate);
+
+  // 🟢 If we found an ongoing shift, return it immediately
+  if (ongoingShift) return ongoingShift;
+
+  // 🟡 Otherwise, use the current template logic to infer which shift *should* be active
+  const currentTemplate = await getShiftTemplateForNow();
 
   if (!currentTemplate) {
-    console.log("No template found for this hour");
+    logger.error("No template found for this hour");
     return null;
   }
 
-  // Define midnight boundary for today's date
-  const midnightToday = now.startOf("day").toDate();
-
-  // If shift is overnight (ex: 16–00) and we're past midnight (00–07),
-  // then its start time was *yesterday*.
+  // Determine if we should look at yesterday (overnight shift)
   const startBoundary =
     currentTemplate.endHour < currentTemplate.startHour &&
     currentHour < currentTemplate.endHour
       ? dayjs(midnightToday).subtract(1, "day").toDate()
       : midnightToday;
 
-  const activeShift = await prisma.shift.findFirst({
+  const predictedShift = await prisma.shift.findFirst({
     where: {
       templateId: currentTemplate.id,
       startTime: { gte: startBoundary },
-
-      OR: [{ endTime: { isSet: false } }, { endTime: null }],
+      OR: [{ endTime: null }, { endTime: { isSet: false } }],
     },
     include: {
       user: true,
@@ -133,5 +147,6 @@ export async function getCurrentShift() {
       cashFund: true,
     },
   });
-  return activeShift;
+
+  return predictedShift;
 }
