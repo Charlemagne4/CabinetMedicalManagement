@@ -4,7 +4,6 @@ import { env } from "@/env";
 
 const createPrismaClient = () =>
   new PrismaClient({
-    omit: { user: { password: true, salt: true } },
     log:
       env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });

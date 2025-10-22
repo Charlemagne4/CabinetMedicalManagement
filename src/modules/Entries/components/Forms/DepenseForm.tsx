@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { DepenseCreateSchema as DepenseSchema } from "@/types/Entries";
 
@@ -19,7 +20,7 @@ function DepenseForm() {
       await utils.entries.invalidate();
       reset();
     },
-    onError: () => toast.error("Erreur ❌"),
+    onError: () => toast.error("Erreur lors de l'ajout ❌"),
   });
 
   const {
@@ -37,26 +38,33 @@ function DepenseForm() {
 
   const onSubmit = (values: DepenseFormValues) => {
     create.mutate({
-      entry: { ...values, type: "DEPENSE" },
+      entry: { ...values, Entrytype: "DEPENSE" },
     });
   };
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-4 rounded border p-4"
+      className="flex w-full min-w-80 flex-col space-y-6 rounded-md p-2"
     >
-      <div>
-        <label className="block text-sm font-medium">Libellé</label>
-        <Input {...register("label")} placeholder="Ex: Fournitures" />
+      {/* Label */}
+      <div className="flex flex-col space-y-2">
+        <Label htmlFor="label">Libellé</Label>
+        <Input
+          id="label"
+          {...register("label")}
+          placeholder="Ex : Fournitures"
+        />
         {errors.label && (
           <p className="text-sm text-red-500">{errors.label.message}</p>
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium">Montant</label>
+      {/* Amount */}
+      <div className="flex flex-col space-y-2">
+        <Label htmlFor="amount">Montant</Label>
         <Input
+          id="amount"
           type="number"
           step="0.01"
           {...register("amount", { valueAsNumber: true })}
@@ -66,10 +74,15 @@ function DepenseForm() {
         )}
       </div>
 
-      {/* shiftId est caché car déjà fourni */}
+      {/* Hidden shiftId */}
       <input type="hidden" {...register("shiftId")} />
 
-      <Button type="submit" disabled={isSubmitting || create.isPending}>
+      {/* Submit */}
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isSubmitting || create.isPending}
+      >
         {isSubmitting || create.isPending ? "Ajout..." : "Ajouter dépense"}
       </Button>
     </form>

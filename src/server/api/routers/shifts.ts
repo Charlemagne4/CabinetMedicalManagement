@@ -33,6 +33,7 @@ export const ShiftRouter = createTRPCRouter({
       const data = await db.operation.findMany({
         where: { shiftId },
         include: {
+          consultation: { include: { credit: true } },
           user: {
             select: { name: true, role: true, email: true, id: true },
           },
@@ -93,13 +94,15 @@ export const ShiftRouter = createTRPCRouter({
           template: true,
           Operations: {
             include: {
+              consultation: { include: { credit: true } },
               user: {
                 select: { name: true, role: true, email: true, id: true },
               },
             },
-            orderBy: {
-              date: "desc", // or whatever field you want
-            },
+            orderBy: [
+              { date: "desc" },
+              { id: "desc" }, // secondary key for stable ordering
+            ],
             take: limit + 1,
           },
         },
@@ -168,7 +171,7 @@ export const ShiftRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { session } = ctx;
       const { cashfund } = input;
-      const currentHour = now.hour();
+      const currentHour = now().hour();
       logger.debug({ currentHour: currentHour });
 
       // Find current shift template matching current time
@@ -179,13 +182,13 @@ export const ShiftRouter = createTRPCRouter({
       const currentShift = await getCurrentShift();
 
       const shiftStartDay = dayjs(currentShift?.startTime).startOf("day");
-      const currentDay = now.startOf("day");
+      const currentDay = now().startOf("day");
       // 🕒 Check if within 1h before next shift
 
       const isWithinNextShiftWindow =
         currentShift &&
-        (currentShift.template.endHour - now.hour() <= 1 ||
-          24 - now.hour() + currentShift.template.endHour <= 1);
+        (currentShift.template.endHour - now().hour() <= 1 ||
+          24 - now().hour() + currentShift.template.endHour <= 1);
 
       // ❌ Prevent user from starting multiple shifts
       if (
@@ -219,10 +222,10 @@ export const ShiftRouter = createTRPCRouter({
         const createdShift = await tx.shift.create({
           data: {
             templateId: template.id,
-            startTime: now.toDate(),
+            startTime: now().toDate(),
             userId: session.user.id,
             cashFund: { create: { amount: cashfund } },
-            recettes: { create: { totalAmount: 0, date: now.toDate() } },
+            recettes: { create: { totalAmount: 0, date: now().toDate() } },
           },
         });
         logger.debug(createdShift);

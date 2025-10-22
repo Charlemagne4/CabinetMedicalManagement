@@ -8,10 +8,11 @@ import { getCurrentShift } from "@/modules/shifts/functions/StartShiftOnLogin";
 import { db } from "@/server/db";
 import { logger } from "@/utils/pino";
 import { now } from "@/lib/daysjs";
+import { ConsultationType } from "@prisma/client";
 
-const entrySchema = z.discriminatedUnion("type", [
-  DepenseCreateSchema.extend({ type: z.literal("DEPENSE") }),
-  ConsultationCreateSchema.extend({ type: z.literal("CONSULTATION") }),
+const entrySchema = z.discriminatedUnion("Entrytype", [
+  DepenseCreateSchema.extend({ Entrytype: z.literal("DEPENSE") }),
+  ConsultationCreateSchema.extend({ Entrytype: z.literal("CONSULTATION") }),
 ]);
 
 export const entriesRouter = createTRPCRouter({
@@ -39,8 +40,11 @@ export const entriesRouter = createTRPCRouter({
       // if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
       const data = await db.operation.findMany({
-        where: { shiftId: currentShift.id },
+        where: {
+          shiftId: currentShift.id,
+        },
         include: {
+          consultation: { include: { credit: true } },
           user: {
             select: { name: true, role: true, email: true, id: true },
           },
@@ -57,7 +61,6 @@ export const entriesRouter = createTRPCRouter({
             }
           : {}),
       });
-
       const hasMore = data.length > limit;
       //remove last item if there is more data
       const items = hasMore ? data.slice(0, -1) : data;
@@ -76,7 +79,6 @@ export const entriesRouter = createTRPCRouter({
       };
     }),
   create: protectedProcedure
-    //TODO: Add shift id
     .input(
       z.object({
         entry: entrySchema,
@@ -93,7 +95,7 @@ export const entriesRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
           message: "no shift active",
         });
-
+      logger.debug(entry);
       await addEntry(
         entry,
         session,
@@ -114,25 +116,35 @@ async function addEntry(
   return await db.$transaction(async (tx) => {
     //entering in Entry table
     let refId: string;
-
-    switch (entry.type) {
+    let consultation;
+    switch (entry.Entrytype) {
       case "CONSULTATION": {
-        const consultation = await tx.consultation.create({
+        consultation = await tx.consultation.create({
           data: {
-            date: now.toDate(),
+            date: now().toDate(),
             shiftId,
             amount: entry.amount,
             patient: entry.patient,
-            type: "CONSULTATION",
+            type: entry.type,
           },
         });
+        if (entry.credit) {
+          await tx.credit.create({
+            data: {
+              date: now().toDate(),
+              amount: consultation.amount,
+              consultationId: consultation.id,
+              isPaid: false,
+            },
+          });
+        }
         refId = consultation.id;
         break;
       }
       case "DEPENSE": {
         const depense = await tx.depense.create({
           data: {
-            date: now.toDate(),
+            date: now().toDate(),
             shiftId,
             // map only depense-specific fields
             amount: entry.amount,
@@ -151,24 +163,29 @@ async function addEntry(
     //entering in operation table
     const operation = await tx.operation.create({
       data: {
-        date: now.toDate(),
+        date: now().toDate(),
         shiftId,
         amount: entry.amount,
-        type: entry.type,
+        type: entry.Entrytype,
         refId,
         userId: session.user.id,
+        consultationId: consultation?.id,
         label:
-          entry.type === "CONSULTATION" ? `${entry.patient}` : `${entry.label}`,
+          entry.Entrytype === "CONSULTATION"
+            ? `${entry.patient}`
+            : `${entry.label}`,
         // other common fields if needed
       },
     });
     logger.debug(currentRecettesId);
+    //return if it's a credit
+    if (entry.Entrytype === "CONSULTATION" && entry.credit) return operation;
     //deduct or add amount
     const recette = await tx.recette.updateMany({
       where: { id: currentRecettesId },
       data: {
         totalAmount:
-          entry.type === "CONSULTATION"
+          entry.Entrytype === "CONSULTATION"
             ? { increment: entry.amount }
             : { decrement: entry.amount },
       },

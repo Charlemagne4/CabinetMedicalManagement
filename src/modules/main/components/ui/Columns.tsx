@@ -17,11 +17,13 @@ import { logger } from "@/utils/pino";
 import type { EntryType, Prisma } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
 export type entry = Prisma.OperationGetPayload<{
   include: {
+    consultation: { include: { credit: true } };
     user: { select: { name: true; role: true; email: true; id: true } };
   };
 }>;
@@ -62,15 +64,22 @@ export const columns: ColumnDef<entry>[] = [
       return (
         <div className="flex items-center gap-2 truncate">
           <span className="truncate">{entryLabel}</span>
-          <p
+
+          <Badge
             className={cn(
-              "rounded px-2 py-0.5 text-xs font-semibold text-white",
-              entryType === "DEPENSE" && "bg-red-600",
-              entryType === "CONSULTATION" && "bg-green-600",
+              (() => {
+                if (entry.consultation?.type === "BILAN") return "bg-blue-600";
+                if (entry.consultation?.type === "CONSULTATION")
+                  return "bg-green-600";
+                return "bg-red-600";
+              })(), // 👈 function is immediately called
             )}
           >
-            {entryType}
-          </p>
+            {entry.consultation?.type ?? entryType}
+          </Badge>
+          {entry.consultation?.credit?.isPaid === false && (
+            <Badge className="bg-yellow-500">Credit</Badge>
+          )}
         </div>
       );
     },
@@ -108,7 +117,12 @@ export const columns: ColumnDef<entry>[] = [
         <div
           className={cn(
             "text-left font-semibold",
-            isDepense ? "text-red-600" : "text-green-600",
+            (() => {
+              if (entry.consultation?.credit?.isPaid === false)
+                return "text-yellow-500";
+              const color = isDepense ? "text-red-600" : "text-green-600";
+              return color;
+            })(),
           )}
         >
           {formattedAmount}

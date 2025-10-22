@@ -10,9 +10,9 @@ affichage en depends des equipes mat/soir avec medecin tout visible ✅
 UI du medecin ✅
 UI du telephone ✅
 work in progress in "/" ✅
-check include user true in api ✅
 shift ends depending on template.endhour (abandonned) ✅
 shift creation button invalidate getcurrent ✅
+check include user true in api 
 choix entre consultation ou bilan 
 system de credit
 dashboard 

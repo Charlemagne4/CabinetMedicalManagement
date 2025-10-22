@@ -31,8 +31,8 @@ function ResponsiveModal({
     );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-full sm:max-w-lg">
+    <Dialog open={open} onOpenChange={onOpenChange} modal>
+      <DialogContent className="w-auto md:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

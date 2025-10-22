@@ -8,8 +8,8 @@ import { now } from "@/lib/daysjs";
 
 export async function getShiftTemplateForNow() {
   const templates = await db.shiftTemplate.findMany();
-  const currentHour = now.hour();
-  const currentMinute = now.minute();
+  const currentHour = now().hour();
+  const currentMinute = now().minute();
   const currentTimeInHours = currentHour + currentMinute / 60;
 
   // Adjusted time rule: within 1 hour before next shift = counts as next shift
@@ -35,8 +35,8 @@ export async function getShiftTemplateForNow() {
 }
 
 // export async function startShiftOnLogin(userId: string) {
-//   const now = dayjs();
-//   const todayStart = now.startOf("day").toDate();
+//   const now() = dayjs();
+//   const todayStart = now().startOf("day").toDate();
 
 //   // find active shift
 //   let shift = await prisma.shift.findFirst({
@@ -52,7 +52,7 @@ export async function getShiftTemplateForNow() {
 
 //     shift = await prisma.shift.create({
 //       data: {
-//         startTime: now.toDate(),
+//         startTime: now().toDate(),
 //         userId: userId,
 //         confirmed: true,
 //         templateId: template?.id, // 👈 link to template if found
@@ -69,15 +69,15 @@ export async function getShiftTemplateForNow() {
 // }
 
 // export async function getCurrentShift() {
-//   const now = dayjs();
+//   const now() = dayjs();
 
 //   const currentShift = await prisma.shift.findFirst({
 //     where: {
-//       startTime: { lte: now.toDate() }, // started already
+//       startTime: { lte: now().toDate() }, // started already
 //       OR: [
 //         { endTime: null }, // not finished
 //         { endTime: { isSet: false } }, // not finished
-//         { endTime: { gt: now.toDate() } }, // still active
+//         { endTime: { gt: now().toDate() } }, // still active
 //       ],
 //     },
 //     include: { template: true, cashFund: true },
@@ -87,9 +87,9 @@ export async function getShiftTemplateForNow() {
 // }
 
 export async function getCurrentShift() {
-  const currentHour = now.hour();
-  const currentDate = now.toDate();
-  const midnightToday = now.startOf("day").toDate();
+  const currentHour = now().hour();
+  const currentDate = now().toDate();
+  const midnightToday = now().startOf("day").toDate();
 
   // 🟢 STEP 1: Find any shift that started today (or late last night) and is still open
   const ongoingShift = await prisma.shift.findFirst({

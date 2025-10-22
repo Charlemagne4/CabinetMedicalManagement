@@ -67,7 +67,7 @@ export const authConfig = {
         },
       },
       authorize: async (credentials) => {
-        // logger.debug(credentials);
+        logger.debug(credentials);
         const { email, password } =
           await signInFormSchema.parseAsync(credentials);
         // Add logic here to look up the user from the credentials supplied

@@ -12,10 +12,10 @@ export function canStartNewShift(currentShift?: shift | null): boolean {
   if (!currentShift) return true;
 
   const { startHour, endHour } = currentShift.template;
-  const currentHour = now.hour();
+  const currentHour = now().hour();
 
   const shiftStartDay = dayjs(currentShift.startTime);
-  const currentDay = now;
+  const currentDay = now();
 
   // 🟢 CASE 1: New calendar day
   if (!shiftStartDay.isSame(currentDay, "day")) return true;

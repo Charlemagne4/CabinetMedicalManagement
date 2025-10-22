@@ -12,23 +12,23 @@ import AddEntryForm from "./AddEntryForm";
 function AddEntryModal() {
   const utils = api.useUtils();
   const [entryModalOpen, setEntryModalOpen] = useState(false);
-    const create = api.entries.create.useMutation({
-      onSuccess: async () => {
-        toast.success("Entrée Crée");
-        await utils.entries.invalidate();
-        await utils.shifts.getCurrent.invalidate();
-        await utils.shifts.invalidate();
-        setEntryModalOpen((prev) => !prev);
-      },
-      onError: (error) => {
-        toast.error(error.message);
-      },
-    });
+  const create = api.entries.create.useMutation({
+    onSuccess: async () => {
+      toast.success("Entrée Crée");
+      await utils.entries.invalidate();
+      await utils.shifts.getCurrent.invalidate();
+      await utils.shifts.invalidate();
+      setEntryModalOpen((prev) => !prev);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   return (
     <>
       <ResponsiveModal
-        title="Upload a video"
+        title="Entrez une operation"
         open={entryModalOpen}
         onOpenChange={(open) => {
           setEntryModalOpen(open); // keeps modal state in sync

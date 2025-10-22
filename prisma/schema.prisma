@@ -128,15 +128,17 @@ model Recette {
 }
 
 model Consultation {
-    id       String           @id @default(auto()) @map("_id") @db.ObjectId
-    patient  String
-    amount   Float
-    date     DateTime
-    credit   Credit?          @relation(fields: [creditId], references: [id])
-    creditId String?          @db.ObjectId
-    Shift    Shift?           @relation(fields: [shiftId], references: [id])
-    shiftId  String?          @db.ObjectId
-    type     ConsultationType
+    id        String           @id @default(auto()) @map("_id") @db.ObjectId
+    patient   String
+    amount    Float
+    date      DateTime
+    shiftId   String?          @db.ObjectId
+    type      ConsultationType
+    Operation Operation[]
+
+    // ✅ One-to-one relation (Credit owns the foreign key)
+    credit Credit?
+    Shift  Shift?  @relation(fields: [shiftId], references: [id])
 }
 
 enum ConsultationType {
@@ -154,12 +156,14 @@ model Depense {
 }
 
 model Credit {
-    id             String         @id @default(auto()) @map("_id") @db.ObjectId
-    amount         Float
-    isPaid         Boolean        @default(false)
-    date           DateTime
-    consultationId String         @unique @db.ObjectId
-    Consultation   Consultation[]
+    id     String   @id @default(auto()) @map("_id") @db.ObjectId
+    amount Float
+    isPaid Boolean  @default(false)
+    date   DateTime
+
+    // ✅ This is the only FK in the relation
+    consultationId String       @unique @db.ObjectId
+    consultation   Consultation @relation(fields: [consultationId], references: [id])
 }
 
 model Operation {
@@ -171,6 +175,9 @@ model Operation {
     type   EntryType
     amount Float
     label  String
+
+    consultation   Consultation? @relation(fields: [consultationId], references: [id])
+    consultationId String?       @db.ObjectId
 
     shiftId String @db.ObjectId
     Shift   Shift  @relation(fields: [shiftId], references: [id])
