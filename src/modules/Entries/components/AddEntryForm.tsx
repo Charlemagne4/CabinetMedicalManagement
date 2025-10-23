@@ -4,8 +4,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EntryType } from "@prisma/client";
 import ConsultationForm from "./Forms/ConsultationForm";
 import DepenseForm from "./Forms/DepenseForm";
+import type { api } from "@/trpc/react";
 
-export default function EntryForms() {
+export interface EntryFormsProps {
+  create: ReturnType<typeof api.entries.create.useMutation>;
+}
+
+export default function EntryForms({ create }: EntryFormsProps) {
   return (
     <Tabs
       orientation="vertical"
@@ -23,10 +28,11 @@ export default function EntryForms() {
 
       {/* Forms */}
       <TabsContent value={EntryType.CONSULTATION}>
-        <ConsultationForm />
+        <ConsultationForm create={create} />
       </TabsContent>
+
       <TabsContent value={EntryType.DEPENSE}>
-        <DepenseForm />
+        <DepenseForm create={create} />
       </TabsContent>
     </Tabs>
   );

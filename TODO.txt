@@ -12,9 +12,11 @@ UI du telephone ✅
 work in progress in "/" ✅
 shift ends depending on template.endhour (abandonned) ✅
 shift creation button invalidate getcurrent ✅
+system de credit ✅
 check include user true in api 
 choix entre consultation ou bilan 
-system de credit
+list all the entries as well as all the credits, for staff to pay credits
+pay the credit funtion
 dashboard 
 endShift function on logout but when a shift can be started 
 Dark mode/light mode check with the custom colors 

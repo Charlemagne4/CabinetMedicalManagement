@@ -3,33 +3,22 @@
 import { type z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { ConsultationCreateSchema as ConsultationSchema } from "@/types/Entries";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { EntryFormsProps } from "../AddEntryForm";
 
 type ConsultationFormValues = z.infer<typeof ConsultationSchema>;
 
-function ConsultationForm() {
-  const utils = api.useUtils();
-  const create = api.entries.create.useMutation({
-    onSuccess: async () => {
-      toast.success("Consultation ajoutée ✅");
-      await utils.entries.invalidate();
-      reset();
-    },
-    onError: () => toast.error("Erreur lors de l'ajout ❌"),
-  });
+function ConsultationForm({ create }: EntryFormsProps) {
 
   const {
     register,
     handleSubmit,
     control,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm<ConsultationFormValues>({
     resolver: zodResolver(ConsultationSchema),

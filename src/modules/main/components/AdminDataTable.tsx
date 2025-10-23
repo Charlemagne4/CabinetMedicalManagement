@@ -36,7 +36,7 @@ function AdminDataTable({ shift, query }: AdminDataTableProps) {
 }
 export default AdminDataTable;
 
-function AdminDataTableSuspence({ shift, query }: AdminDataTableProps) {
+function AdminDataTableSuspence({ shift }: AdminDataTableProps) {
   const opQuery = api.shifts.getShiftOperations.useInfiniteQuery(
     {
       limit: DEFAULT_LIMIT,

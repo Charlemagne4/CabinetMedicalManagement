@@ -3,30 +3,18 @@
 import { type z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { DepenseCreateSchema as DepenseSchema } from "@/types/Entries";
+import type { EntryFormsProps } from "../AddEntryForm";
 
 type DepenseFormValues = z.infer<typeof DepenseSchema>;
 
-function DepenseForm() {
-  const utils = api.useUtils();
-  const create = api.entries.create.useMutation({
-    onSuccess: async () => {
-      toast.success("Dépense ajoutée ✅");
-      await utils.entries.invalidate();
-      reset();
-    },
-    onError: () => toast.error("Erreur lors de l'ajout ❌"),
-  });
-
+function DepenseForm({ create }: EntryFormsProps) {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm<DepenseFormValues>({
     resolver: zodResolver(DepenseSchema),

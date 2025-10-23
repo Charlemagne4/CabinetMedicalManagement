@@ -88,7 +88,6 @@ export async function getShiftTemplateForNow() {
 
 export async function getCurrentShift() {
   const currentHour = now().hour();
-  const currentDate = now().toDate();
   const midnightToday = now().startOf("day").toDate();
 
   // 🟢 STEP 1: Find any shift that started today (or late last night) and is still open

@@ -18,6 +18,8 @@ import type { EntryType, Prisma } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { api } from "@/trpc/react";
+import { toast } from "sonner";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -184,6 +186,32 @@ export const columns: ColumnDef<entry>[] = [
     id: "action",
     cell: ({ row }) => {
       const entry = row.original;
+      const credit = entry.consultation?.credit;
+      const utils = api.useUtils();
+
+      const payCredit = api.entries.payCredit.useMutation({
+        onSuccess: async ({ shiftId, message }) => {
+          toast.success(message);
+          await utils.entries.getMany.invalidate();
+          await utils.shifts.getMany.invalidate({});
+
+          await utils.shifts.getShiftOperations.invalidate({ shiftId });
+        },
+        onError: (err) => {
+          toast.error(err.message);
+        },
+      });
+      const switchToCredit = api.entries.switchToCredit.useMutation({
+        onSuccess: async ({ shiftId, message }) => {
+          toast.success(message);
+          await utils.entries.getMany.invalidate();
+          await utils.shifts.getMany.invalidate({});
+          await utils.shifts.getShiftOperations.invalidate({ shiftId });
+        },
+        onError: (err) => {
+          toast.error(err.message);
+        },
+      });
 
       return (
         <DropdownMenu>
@@ -201,8 +229,24 @@ export const columns: ColumnDef<entry>[] = [
               Copy Name
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>switch to Credit</DropdownMenuItem>
-            <DropdownMenuItem>pay</DropdownMenuItem>
+            {credit && !credit.isPaid && (
+              <DropdownMenuItem
+                onClick={() => payCredit.mutate({ creditId: credit.id })}
+              >
+                💰 Pay Credit
+              </DropdownMenuItem>
+            )}
+            {(!credit || credit.isPaid) && (
+              <DropdownMenuItem
+                onClick={() => {
+                  switchToCredit.mutate({
+                    consultationId: entry.consultationId,
+                  });
+                }}
+              >
+                💳 Switch to Credit
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       );

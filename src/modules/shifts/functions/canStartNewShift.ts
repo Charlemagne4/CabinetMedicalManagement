@@ -1,6 +1,4 @@
 import { now } from "@/lib/daysjs";
-import { db } from "@/server/db";
-import { logger } from "@/utils/pino";
 import type { Prisma } from "@prisma/client";
 import dayjs from "dayjs";
 

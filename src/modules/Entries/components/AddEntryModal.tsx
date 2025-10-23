@@ -13,12 +13,16 @@ function AddEntryModal() {
   const utils = api.useUtils();
   const [entryModalOpen, setEntryModalOpen] = useState(false);
   const create = api.entries.create.useMutation({
-    onSuccess: async () => {
-      toast.success("Entrée Crée");
-      await utils.entries.invalidate();
-      await utils.shifts.getCurrent.invalidate();
-      await utils.shifts.invalidate();
-      setEntryModalOpen((prev) => !prev);
+    onSuccess: async ({ shiftId }) => {
+      toast.success("Entrée créée");
+      await Promise.all([
+        utils.entries.invalidate(),
+        utils.entries.getMany.invalidate(),
+        utils.shifts.getCurrent.invalidate(),
+        utils.shifts.getMany.invalidate(),
+        utils.shifts.getShiftOperations.invalidate({ shiftId }),
+      ]);
+      setEntryModalOpen(false);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -37,7 +41,7 @@ function AddEntryModal() {
           }
         }}
       >
-        <AddEntryForm />
+        <AddEntryForm create={create} />
       </ResponsiveModal>
       <Button
         variant={"secondary"}

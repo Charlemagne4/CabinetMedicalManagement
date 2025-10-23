@@ -1,7 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import dayjs from "dayjs";
 import { logger } from "@/utils/pino";
 import { db } from "@/server/db";
 import {
@@ -82,7 +81,7 @@ export const ShiftRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const { limit, cursor } = input;
-      const { db, session } = ctx;
+      const { db } = ctx;
       // TODO: Remove after debug
       await getShiftTemplateForNow();
       const data = await db.shift.findMany({
@@ -136,7 +135,7 @@ export const ShiftRouter = createTRPCRouter({
             : null,
       };
     }),
-  getCurrent: protectedProcedure.query(async ({ input, ctx }) => {
+  getCurrent: protectedProcedure.query(async ({}) => {
     try {
       const currentShift = await getCurrentShift();
       logger.debug({ currentShift }, "current Shift");
@@ -177,25 +176,17 @@ export const ShiftRouter = createTRPCRouter({
       // Find current shift template matching current time
       const template = await getShiftTemplateForNow();
 
-      if (!template) throw new TRPCError({ code: "CONFLICT" });
+      if (!template)
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Pas de shift en ce momement",
+        });
       // Check if user already has an active shift
       const currentShift = await getCurrentShift();
 
-      const shiftStartDay = dayjs(currentShift?.startTime).startOf("day");
-      const currentDay = now().startOf("day");
-      // 🕒 Check if within 1h before next shift
+      const canUserStartNewShift = canStartNewShift();
 
-      const isWithinNextShiftWindow =
-        currentShift &&
-        (currentShift.template.endHour - now().hour() <= 1 ||
-          24 - now().hour() + currentShift.template.endHour <= 1);
-
-      // ❌ Prevent user from starting multiple shifts
-      if (
-        currentShift?.userId === session.user.id &&
-        !isWithinNextShiftWindow &&
-        shiftStartDay.isSame(currentDay)
-      ) {
+      if (!canUserStartNewShift) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "You already have an active shift.",
