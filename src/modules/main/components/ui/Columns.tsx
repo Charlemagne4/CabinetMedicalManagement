@@ -25,7 +25,8 @@ import { toast } from "sonner";
 // You can use a Zod schema here if you want.
 export type entry = Prisma.OperationGetPayload<{
   include: {
-    consultation: { include: { credit: true } };
+    Shift: true;
+    Consultation: { include: { credit: true } };
     user: { select: { name: true; role: true; email: true; id: true } };
   };
 }>;
@@ -70,18 +71,22 @@ export const columns: ColumnDef<entry>[] = [
           <Badge
             className={cn(
               (() => {
-                if (entry.consultation?.type === "BILAN") return "bg-blue-600";
-                if (entry.consultation?.type === "CONSULTATION")
+                if (entry.Consultation?.type === "BILAN") return "bg-blue-600";
+                if (entry.Consultation?.type === "CONSULTATION")
                   return "bg-green-600";
                 return "bg-red-600";
               })(), // 👈 function is immediately called
             )}
           >
-            {entry.consultation?.type ?? entryType}
+            {entry.Consultation?.type ?? entryType}
           </Badge>
-          {entry.consultation?.credit?.isPaid === false && (
+          {entry.Consultation?.credit?.isPaid === false && (
             <Badge className="bg-yellow-500">Credit</Badge>
           )}
+          {entry.Consultation?.credit &&
+            entry.Consultation?.credit?.isPaid === true && (
+              <Badge className="bg-accent-foreground">Payé</Badge>
+            )}
         </div>
       );
     },
@@ -120,7 +125,7 @@ export const columns: ColumnDef<entry>[] = [
           className={cn(
             "text-left font-semibold",
             (() => {
-              if (entry.consultation?.credit?.isPaid === false)
+              if (entry.Consultation?.credit?.isPaid === false)
                 return "text-yellow-500";
               const color = isDepense ? "text-red-600" : "text-green-600";
               return color;
@@ -186,7 +191,7 @@ export const columns: ColumnDef<entry>[] = [
     id: "action",
     cell: ({ row }) => {
       const entry = row.original;
-      const credit = entry.consultation?.credit;
+      const credit = entry.Consultation?.credit;
       const utils = api.useUtils();
 
       const payCredit = api.entries.payCredit.useMutation({
@@ -195,7 +200,9 @@ export const columns: ColumnDef<entry>[] = [
           await utils.entries.getMany.invalidate();
           await utils.shifts.getMany.invalidate({});
 
-          await utils.shifts.getShiftOperations.invalidate({ shiftId });
+          if (shiftId) {
+            await utils.shifts.getShiftOperations.invalidate({ shiftId });
+          }
         },
         onError: (err) => {
           toast.error(err.message);
@@ -240,7 +247,7 @@ export const columns: ColumnDef<entry>[] = [
               <DropdownMenuItem
                 onClick={() => {
                   switchToCredit.mutate({
-                    consultationId: entry.consultationId,
+                    consultationId: entry.Consultation?.id,
                   });
                 }}
               >

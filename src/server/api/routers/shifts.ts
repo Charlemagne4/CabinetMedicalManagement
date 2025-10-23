@@ -29,10 +29,14 @@ export const ShiftRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const { shiftId, limit, cursor } = input;
 
+      if (!shiftId) {
+        throw new Error("no valid shift");
+      }
       const data = await db.operation.findMany({
         where: { shiftId },
         include: {
-          consultation: { include: { credit: true } },
+          Consultation: { include: { credit: true } },
+          Shift: true,
           user: {
             select: { name: true, role: true, email: true, id: true },
           },
@@ -93,7 +97,8 @@ export const ShiftRouter = createTRPCRouter({
           template: true,
           Operations: {
             include: {
-              consultation: { include: { credit: true } },
+              Shift: true,
+              Consultation: { include: { credit: true } },
               user: {
                 select: { name: true, role: true, email: true, id: true },
               },

@@ -36,7 +36,7 @@ export const usersRouter = createTRPCRouter({
             password: hashed,
             name: username,
             salt,
-            createdAt: now.toDate(),
+            createdAt: now().toDate(),
           },
         });
 

@@ -11,4 +11,5 @@ dayjs.extend(localizedFormat);
 dayjs.tz.setDefault("Africa/Algiers");
 
 // ✅ Export a function that gives the current time
+// fake date: "2025-10-22T7:30:00", "Africa/Algiers"
 export const now = () => dayjs.tz();

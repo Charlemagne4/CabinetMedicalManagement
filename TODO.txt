@@ -13,14 +13,15 @@ work in progress in "/" ✅
 shift ends depending on template.endhour (abandonned) ✅
 shift creation button invalidate getcurrent ✅
 system de credit ✅
-check include user true in api 
-choix entre consultation ou bilan 
-list all the entries as well as all the credits, for staff to pay credits
-pay the credit funtion
+choix entre consultation ou bilan ✅
+list all the entries as well as all the credits, for staff to pay credits ✅
+pay the credit funtion ✅
+badge payé pour les credit payé ✅
+badge for types of entries in main instead if colored divs ✅
 dashboard 
+check include user true in api 
 endShift function on logout but when a shift can be started 
 Dark mode/light mode check with the custom colors 
 update auth when logged in maybe ?
 rate limiting
-badge for types of entries in main instead if colored divs
 search of individual datatable should query db 

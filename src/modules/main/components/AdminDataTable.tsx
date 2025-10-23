@@ -14,7 +14,8 @@ interface AdminDataTableProps {
     include: {
       Operations: {
         include: {
-          consultation: { include: { credit: true } };
+          Shift: true;
+          Consultation: { include: { credit: true } };
           user: {
             select: { name: true; role: true; email: true; id: true };
           };

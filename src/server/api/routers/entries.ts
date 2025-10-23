@@ -99,12 +99,15 @@ export const entriesRouter = createTRPCRouter({
     }),
 
   payCredit: protectedProcedure
-    .input(z.object({ creditId: z.string() }))
+    .input(z.object({ creditId: z.string().nullish() }))
     .mutation(async ({ input, ctx }) => {
       const { creditId } = input;
       const { db, session } = ctx;
 
       const currentShift = await getCurrentShift();
+      if (!creditId) {
+        throw new Error("no valid creditId");
+      }
 
       // 3. If no shift or recette is found, stop
       if (!currentShift?.recettes?.id) {
@@ -113,28 +116,48 @@ export const entriesRouter = createTRPCRouter({
 
       const consultation = await db.$transaction(async (tx) => {
         const foundCredit = await tx.credit.update({
-          where: { id: creditId, isPaid: false },
-          include: { consultation: { include: { Shift: true } } },
-          data: { isPaid: true },
+          where: { id: creditId },
+          data: {
+            isPaid: true,
+            consultation: {
+              update: {
+                shiftId: currentShift.id,
+              },
+            },
+          },
+          include: {
+            consultation: true,
+          },
         });
+
+        await tx.operation.update({
+          where: { id: foundCredit.consultation.operationId },
+          data: { shiftId: currentShift.id },
+        });
+
         if (!foundCredit)
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "pas de credit pour cette operation",
           });
-
         const recette = await tx.recette.update({
           where: { id: currentShift.recettes?.id },
           data: {
             totalAmount: { increment: foundCredit.amount },
           },
         });
+
+        await tx.operation.updateMany({
+          where: { Consultation: { id: foundCredit.consultationId } },
+          data: { date: now().toDate() },
+        });
+
         return foundCredit.consultation;
       });
 
       return {
         message: "Credit paid successfully",
-        shiftId: consultation.Shift?.id,
+        shiftId: consultation.shiftId,
       };
     }),
   getMany: protectedProcedure
@@ -162,10 +185,14 @@ export const entriesRouter = createTRPCRouter({
 
       const data = await db.operation.findMany({
         where: {
-          shiftId: currentShift.id,
+          OR: [
+            { shiftId: currentShift.id },
+            { Consultation: { credit: { isPaid: false } } },
+          ],
         },
         include: {
-          consultation: { include: { credit: true } },
+          Shift: true,
+          Consultation: { include: { credit: true } },
           user: {
             select: { name: true, role: true, email: true, id: true },
           },
@@ -238,10 +265,26 @@ async function addEntry(
     //entering in Entry table
     let refId: string;
     let consultation;
+    //entering in operation table
+    const operation = await tx.operation.create({
+      data: {
+        date: now().toDate(),
+        shiftId,
+        amount: entry.amount,
+        type: entry.Entrytype,
+        userId: session.user.id,
+        label:
+          entry.Entrytype === "CONSULTATION"
+            ? `${entry.patient}`
+            : `${entry.label}`,
+        // other common fields if needed
+      },
+    });
     switch (entry.Entrytype) {
       case "CONSULTATION": {
         consultation = await tx.consultation.create({
           data: {
+            operationId: operation.id,
             date: now().toDate(),
             shiftId,
             amount: entry.amount,
@@ -282,23 +325,6 @@ async function addEntry(
           code: "BAD_REQUEST",
         });
     }
-    //entering in operation table
-    const operation = await tx.operation.create({
-      data: {
-        date: now().toDate(),
-        shiftId,
-        amount: entry.amount,
-        type: entry.Entrytype,
-        refId,
-        userId: session.user.id,
-        consultationId: consultation?.id,
-        label:
-          entry.Entrytype === "CONSULTATION"
-            ? `${entry.patient}`
-            : `${entry.label}`,
-        // other common fields if needed
-      },
-    });
     logger.debug(currentRecettesId);
     //return if it's a credit
     if (entry.Entrytype === "CONSULTATION" && entry.credit) return operation;

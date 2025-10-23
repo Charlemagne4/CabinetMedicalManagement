@@ -129,17 +129,18 @@ model Recette {
 }
 
 model Consultation {
-    id        String           @id @default(auto()) @map("_id") @db.ObjectId
-    patient   String
-    amount    Float
-    date      DateTime
-    shiftId   String?          @db.ObjectId
-    type      ConsultationType
-    Operation Operation[]
+    id      String           @id @default(auto()) @map("_id") @db.ObjectId
+    patient String
+    amount  Float
+    date    DateTime
+    shiftId String?          @db.ObjectId
+    type    ConsultationType
+    credit  Credit?
+    Shift   Shift?           @relation(fields: [shiftId], references: [id])
 
-    // ✅ One-to-one relation (Credit owns the foreign key)
-    credit Credit?
-    Shift  Shift?  @relation(fields: [shiftId], references: [id])
+    // 👇 Mandatory link to Operation (must exist)
+    operationId String    @unique @db.ObjectId
+    Operation   Operation @relation(fields: [operationId], references: [id])
 }
 
 enum ConsultationType {
@@ -170,17 +171,15 @@ model Credit {
 }
 
 model Operation {
-    id   String   @id @default(auto()) @map("_id") @db.ObjectId
-    date DateTime
-
-    // refId ids the actual entry in the seaparate tables
-    refId  String    @db.ObjectId
+    id     String    @id @default(auto()) @map("_id") @db.ObjectId
+    date   DateTime
+    refId  String?   @db.ObjectId
     type   EntryType
     amount Float
     label  String
 
-    consultation   Consultation? @relation(fields: [consultationId], references: [id])
-    consultationId String?       @db.ObjectId
+    // 👇 Optional reverse relation (not required)
+    Consultation Consultation?
 
     shiftId String @db.ObjectId
     Shift   Shift  @relation(fields: [shiftId], references: [id])
