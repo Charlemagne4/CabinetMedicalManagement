@@ -8,7 +8,6 @@ import { getCurrentShift } from "@/modules/shifts/functions/StartShiftOnLogin";
 import { db } from "@/server/db";
 import { logger } from "@/utils/pino";
 import { now } from "@/lib/daysjs";
-import { ConsultationType } from "@prisma/client";
 
 const entrySchema = z.discriminatedUnion("Entrytype", [
   DepenseCreateSchema.extend({ Entrytype: z.literal("DEPENSE") }),
@@ -16,6 +15,126 @@ const entrySchema = z.discriminatedUnion("Entrytype", [
 ]);
 
 export const entriesRouter = createTRPCRouter({
+  getActivitySummary: protectedProcedure.query(async ({ ctx }) => {
+    const shift = await getCurrentShift();
+    if (!shift) return null;
+
+    const totalRecettes = shift.recettes?.totalAmount ?? 0;
+    const totalDepenses = shift.expenses.reduce(
+      (sum, d) => sum + (d.amount ?? 0),
+      0,
+    );
+
+    // From consultations → credits
+    const allCredits = shift.consultations
+      .map((c) => c.credit)
+      .filter((c): c is NonNullable<typeof c> => !!c);
+
+    const creditsAdded = allCredits
+      .filter((c) => !c.isPaid)
+      .reduce((sum, c) => sum + (c.amount ?? 0), 0);
+
+    const creditsPaid = allCredits
+      .filter((c) => c.isPaid)
+      .reduce((sum, c) => sum + (c.amount ?? 0), 0);
+
+    const balance = totalRecettes - totalDepenses;
+    const netProfit = totalRecettes + creditsPaid - totalDepenses;
+    const expectedProfit =
+      totalRecettes + creditsPaid + creditsAdded - totalDepenses;
+
+    return {
+      shiftId: shift.id,
+      shiftName:
+        shift.template?.name ?? shift.startTime.toLocaleDateString("fr-FR"),
+      startTime: shift.startTime,
+      endTime: shift.endTime,
+      consultationsCount: shift.consultations.length,
+      totalRecettes,
+      totalDepenses,
+      balance,
+      creditsAdded,
+      creditsPaid,
+      netProfit,
+      expectedProfit,
+    };
+  }),
+  getDashboardSummaryData: protectedProcedure.query(async ({ ctx }) => {
+    const [totalRevenue, totalDepenses, creditsNonPayes, creditsPayes] =
+      await Promise.all([
+        ctx.db.recette.aggregate({
+          _sum: { totalAmount: true },
+        }),
+        ctx.db.depense.aggregate({
+          _sum: { amount: true },
+        }),
+        ctx.db.credit.aggregate({
+          where: { isPaid: false },
+          _sum: { amount: true },
+        }),
+        ctx.db.credit.aggregate({
+          where: { isPaid: true },
+          _sum: { amount: true },
+        }),
+      ]);
+    // 💵 Actual profit (only paid + real revenue)
+    const netProfit =
+      (totalRevenue._sum.totalAmount ?? 0) +
+      (creditsPayes._sum.amount ?? 0) -
+      (totalDepenses._sum.amount ?? 0);
+
+    // 💰 Expected profit (if all credits are paid)
+    const expectedProfit =
+      (totalRevenue._sum.totalAmount ?? 0) +
+      (creditsPayes._sum.amount ?? 0) +
+      (creditsNonPayes._sum.amount ?? 0) -
+      (totalDepenses._sum.amount ?? 0);
+
+    return {
+      netProfit,
+      expectedProfit,
+      revenueTotal: totalRevenue._sum.totalAmount ?? 0,
+      depensesTotal: totalDepenses._sum.amount ?? 0,
+      creditsNonPayes: creditsNonPayes._sum.amount ?? 0,
+      creditsPayes: creditsPayes._sum.amount ?? 0,
+    };
+  }),
+  getChartEntries: protectedProcedure.query(async ({ ctx }) => {
+    const { db } = ctx;
+
+    const [unpaidCredits, rawConsultations, depenses] = await Promise.all([
+      db.credit.count({ where: { isPaid: false } }),
+      db.consultation.findMany({}),
+      db.depense.count({}),
+    ]);
+
+    const consultations = rawConsultations.reduce<{
+      // bilans: typeof rawConsultations;
+      // consultations: typeof rawConsultations;
+      count: { bilans: number; consultations: number };
+    }>(
+      (acc, doc) => {
+        if (doc.type === "CONSULTATION") {
+          // acc.consultations.push(doc);
+          acc.count.consultations++;
+        } else if (doc.type === "BILAN") {
+          // acc.bilans.push(doc);
+          acc.count.bilans++;
+        }
+        return acc;
+      },
+      {
+        // bilans: [], consultations: [],
+        count: { bilans: 0, consultations: 0 },
+      },
+    );
+    return {
+      consultations: consultations.count.consultations,
+      bilan: consultations.count.bilans,
+      unpaidCredits,
+      depenses,
+    };
+  }),
   switchToCredit: protectedProcedure
     .input(z.object({ consultationId: z.string().nullish() }))
     .mutation(async ({ input, ctx }) => {
@@ -329,15 +448,15 @@ async function addEntry(
     //return if it's a credit
     if (entry.Entrytype === "CONSULTATION" && entry.credit) return operation;
     //deduct or add amount
-    const recette = await tx.recette.updateMany({
-      where: { id: currentRecettesId },
-      data: {
-        totalAmount:
-          entry.Entrytype === "CONSULTATION"
-            ? { increment: entry.amount }
-            : { decrement: entry.amount },
-      },
-    });
+    if (entry.Entrytype === "CONSULTATION") {
+      await tx.recette.update({
+        where: { id: currentRecettesId },
+        data: {
+          totalAmount: { increment: entry.amount },
+          // : { decrement: entry.amount },
+        },
+      });
+    }
 
     return operation;
   });

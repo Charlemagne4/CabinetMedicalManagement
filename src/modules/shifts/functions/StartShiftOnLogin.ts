@@ -110,6 +110,8 @@ export async function getCurrentShift() {
       user: true,
       template: true,
       recettes: true,
+      expenses: true,
+      consultations: { include: { credit: true } },
       cashFund: true,
     },
     orderBy: { startTime: "desc" },
@@ -142,7 +144,9 @@ export async function getCurrentShift() {
     include: {
       user: true,
       template: true,
+      consultations: { include: { credit: true } },
       recettes: true,
+      expenses: true,
       cashFund: true,
     },
   });
