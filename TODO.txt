@@ -17,6 +17,7 @@ choix entre consultation ou bilan ✅
 list all the entries as well as all the credits, for staff to pay credits ✅
 pay the credit funtion ✅
 badge payé pour les credit payé ✅
+dashboard link multiple inside menu for credits and users
 badge for types of entries in main instead if colored divs ✅
 dashboard 
 charts par mois

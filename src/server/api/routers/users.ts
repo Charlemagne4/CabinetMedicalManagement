@@ -2,11 +2,101 @@ import { prisma } from "../../../../prisma/prisma";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { generateSalt, hashPassword } from "@/utils/passwordHasher";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { logger } from "@/utils/pino";
 import { now } from "@/lib/daysjs";
 
 export const usersRouter = createTRPCRouter({
+  switchActivate: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { db, session } = ctx;
+      const { userId } = input;
+
+      // Ensure only admins can toggle activation
+      if (session.user.role !== "admin") {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Only admins can perform this action",
+        });
+      }
+
+      // Find the user
+      const user = await db.user.findUnique({
+        where: { id: userId, role: "user" },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+
+      // Toggle activation
+      const updatedUser = await db.user.update({
+        where: { id: userId },
+        data: { activated: !user.activated },
+        select: { name: true, activated: true }, // return minimal useful info
+      });
+
+      return updatedUser;
+    }),
+  getMany: protectedProcedure
+    .input(
+      z.object({
+        cursor: z
+          .object({
+            id: z.string(),
+            date: z.date(),
+          })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+      const { cursor, limit } = input;
+
+      const data = await db.user.findMany({
+        where: { role: "user" },
+        include: { _count: { select: { Operation: true } } },
+        omit: {
+          password: true,
+          emailVerified: true,
+          salt: true,
+        },
+        orderBy: [
+          { createdAt: "desc" },
+          { id: "desc" }, // secondary key for stable ordering
+        ],
+        take: limit + 1, // fetch one extra to check if there's more
+        ...(cursor
+          ? {
+              cursor: { createdAt: cursor.date, id: cursor.id },
+              skip: 1,
+            }
+          : {}),
+      });
+      logger.debug(data, "Users");
+
+      const hasMore = data.length > limit;
+      //remove last item if there is more data
+      const items = hasMore ? data.slice(0, -1) : data;
+      // set the next cursor to the last item if there is more data
+      const lastItem = items[items.length - 1];
+
+      return {
+        items,
+        nextCursor:
+          hasMore && lastItem
+            ? {
+                id: lastItem.id,
+                date: lastItem.createdAt,
+              }
+            : null,
+      };
+    }),
   register: publicProcedure
     .input(
       z.object({

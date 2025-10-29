@@ -25,6 +25,7 @@ model User {
     Shift     Shift[]
     Operation Operation[]
     Credit    Credit[]
+    activated Boolean     @default(false)
 }
 
 enum Role {

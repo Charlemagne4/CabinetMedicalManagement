@@ -3,35 +3,48 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const secret = process.env.AUTH_SECRET;
 
-const protectedRoutes = ["/main", "/dashboard"];
+const protectedRoutes = ["/main"];
+const adminRoutes = ["/dashboard"];
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next();
   const { pathname, origin } = request.nextUrl;
+  const token = await getToken({
+    req: request,
+    secret,
+  });
+  const role = token?.role;
 
-  // Auth logic for protected routes
-  const token = await getToken({ req: request, secret });
-  const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route),
-  );
+  const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
+  const isAdminRoute = adminRoutes.some((r) => pathname.startsWith(r));
 
-  if (isProtected && !token) {
-    const callbackUrl = encodeURIComponent(pathname);
-    const redirectUrl = new URL("/signin", origin);
-    redirectUrl.searchParams.set("callbackUrl", callbackUrl);
+  if (isAdminRoute) {
+    if (!token) {
+      const callbackUrl = encodeURIComponent(pathname);
+      const redirectUrl = new URL("/signin", origin);
+      redirectUrl.searchParams.set("callbackUrl", callbackUrl);
 
-    const redirectResponse = NextResponse.redirect(redirectUrl);
-    redirectResponse.headers.set("Cache-Control", "no-store");
-    return redirectResponse;
+      const redirectResponse = NextResponse.redirect(redirectUrl);
+      redirectResponse.headers.set("Cache-Control", "no-store");
+      return redirectResponse;
+    }
+    if (role !== "admin") {
+      return NextResponse.redirect(new URL("/", origin));
+    }
+  } else if (isProtected) {
+    if (!token) {
+      const callbackUrl = encodeURIComponent(pathname);
+      const redirectUrl = new URL("/signin", origin);
+      redirectUrl.searchParams.set("callbackUrl", callbackUrl);
+
+      const redirectResponse = NextResponse.redirect(redirectUrl);
+      redirectResponse.headers.set("Cache-Control", "no-store");
+      return redirectResponse;
+    }
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/main",
-    "/dashboard",
-    "/", // optionally apply to homepage or any public routes
-  ],
+  matcher: ["/", "/dashboard/:path*", "/main/:path*"],
 };

@@ -3,6 +3,7 @@ import Link from "next/link";
 import AuthButton from "@/modules/auth/ui/components/AuthButton";
 import AddEntryModal from "@/modules/Entries/components/AddEntryModal";
 import StartShiftModal from "@/modules/shifts/components/StartShiftModal";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function HomeNavbar() {
   return (
@@ -10,6 +11,7 @@ export default function HomeNavbar() {
       <div className="flex w-full items-center justify-between gap-4">
         {/* Menu and logo */}
         <div className="flex shrink-0 items-center">
+          <SidebarTrigger />
           <Link prefetch href={"/"} className="hidden md:block">
             <div className="flex items-center gap-1 p-4">
               <Image alt="Logo" src={"/logo.svg"} width={32} height={32} />

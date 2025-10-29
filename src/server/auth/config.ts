@@ -38,10 +38,10 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth" {
+declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
-    role?: Role; // Allow role to be any string
+    role?: string;
   }
 }
 

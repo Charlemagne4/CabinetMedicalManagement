@@ -121,10 +121,39 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
-  .use(({ ctx, next }) => {
+  .use(async ({ ctx, next }) => {
     if (!ctx.session?.user) {
-      throw new TRPCError({ code: "UNAUTHORIZED" });
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Must be logged In",
+      });
     }
+
+    const user = await db.user.findFirst({
+      where: { id: ctx.session?.user.id },
+    });
+    // logger.info('current User from trpc middleware:', currentUser);
+    if (!user) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Must be logged In",
+      });
+    }
+    if (!user.activated) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Account not activated",
+      });
+    }
+
+    // const { success } = await ratelimit.limit(user.id);
+
+    // if (!success) {
+    //   throw new TRPCError({
+    //     code: "TOO_MANY_REQUESTS",
+    //     message: "Calm down, Too many requests",
+    //   });
+    // }
     return next({
       ctx: {
         // infers the `session` as non-nullable

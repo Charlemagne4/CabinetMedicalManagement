@@ -3,7 +3,7 @@ import MainFeaturesSection from "../sections/MainFeaturesSection";
 
 function HomeSidebar() {
   return (
-    <Sidebar collapsible="none" className="w-15">
+    <Sidebar collapsible="icon" className="z-40 border-none pt-16">
       <SidebarContent>
         <MainFeaturesSection />
       </SidebarContent>
