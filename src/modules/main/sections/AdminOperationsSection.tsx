@@ -34,63 +34,61 @@ function AdminOperationsSectionSuspense() {
   const items = shifts.pages.flatMap((page) => page.items);
 
   return (
-    <div>
-      <Accordion type="multiple" className="w-[80vw]">
-        {items.length === 0 ? (
-          <div className="text-muted-foreground py-4 text-center">
-            Aucun enregistrement pour ce shift
-          </div>
-        ) : (
-          items.map((shift) => (
-            <AccordionItem value={shift.id} key={shift.id}>
-              <AccordionTrigger>
-                <div className="flex w-full justify-between text-sm">
-                  <span>
-                    {shift.template.name} — {shift.user.name}
-                  </span>
-                  <span>
-                    {shift.startTime.toLocaleDateString("fr-FR")} |{" "}
-                    {shift.recettes?.totalAmount?.toLocaleString("fr-FR")} DA
-                  </span>
-                </div>
-              </AccordionTrigger>
+    <Accordion type="single" className="w-full">
+      {items.length === 0 ? (
+        <div className="text-muted-foreground py-4 text-center">
+          Aucun enregistrement pour ce shift
+        </div>
+      ) : (
+        items.map((shift) => (
+          <AccordionItem value={shift.id} key={shift.id} className="w-full">
+            <AccordionTrigger>
+              <div className="flex w-full justify-between text-sm">
+                <span>
+                  {shift.template.name} — {shift.user.name}
+                </span>
+                <span>
+                  {shift.startTime.toLocaleDateString("fr-FR")} |{" "}
+                  {shift.recettes?.totalAmount?.toLocaleString("fr-FR")} DA
+                </span>
+              </div>
+            </AccordionTrigger>
 
-              <AccordionContent className="space-y-4 p-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <p>
-                    <strong>Début :</strong>{" "}
-                    {shift.startTime.toLocaleString("fr-FR")}
-                  </p>
-                  <p>
-                    <strong>Fin :</strong>{" "}
-                    {shift.endTime
-                      ? shift.endTime.toLocaleString("fr-FR")
-                      : "En cours"}
-                  </p>
-                  <p>
-                    <strong>Employé :</strong> {shift.user.name}
-                  </p>
-                  <p>
-                    <strong>Fond de caisse :</strong>{" "}
-                    {shift.cashFund?.amount ?? 0} DA
-                  </p>
-                  <p>
-                    <strong>Recettes :</strong>{" "}
-                    {shift.recettes?.totalAmount ?? 0} DA
-                  </p>
-                  <p>
-                    <strong>Dépenses :</strong>{" "}
-                    {shift.expenses?.reduce((a, e) => a + e.amount, 0) ?? 0} DA
-                  </p>
-                </div>
+            <AccordionContent className="space-y-4 p-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <p>
+                  <strong>Début :</strong>{" "}
+                  {shift.startTime.toLocaleString("fr-FR")}
+                </p>
+                <p>
+                  <strong>Fin :</strong>{" "}
+                  {shift.endTime
+                    ? shift.endTime.toLocaleString("fr-FR")
+                    : "En cours"}
+                </p>
+                <p>
+                  <strong>Employé :</strong> {shift.user.name}
+                </p>
+                <p>
+                  <strong>Fond de caisse :</strong>{" "}
+                  {shift.cashFund?.amount ?? 0} DA
+                </p>
+                <p>
+                  <strong>Recettes :</strong> {shift.recettes?.totalAmount ?? 0}{" "}
+                  DA
+                </p>
+                <p>
+                  <strong>Dépenses :</strong>{" "}
+                  {shift.expenses?.reduce((a, e) => a + e.amount, 0) ?? 0} DA
+                </p>
+              </div>
 
-                <AdminDataTable shift={shift} query={query} />
-              </AccordionContent>
-            </AccordionItem>
-          ))
-        )}
-        <InfiniteScroll isManual={false} {...query} />
-      </Accordion>
-    </div>
+              <AdminDataTable shift={shift} query={query} />
+            </AccordionContent>
+          </AccordionItem>
+        ))
+      )}
+      <InfiniteScroll isManual={false} {...query} />
+    </Accordion>
   );
 }

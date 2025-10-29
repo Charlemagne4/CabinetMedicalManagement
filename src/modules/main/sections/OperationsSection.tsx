@@ -10,6 +10,7 @@ import OperationRow from "../components/ui/OperationRow";
 import { DataTable } from "../components/ui/DataTable";
 import { columns } from "../components/ui/Columns";
 import { logger } from "@/utils/pino";
+import { toast } from "sonner";
 
 function OperationsSection() {
   return (
@@ -30,6 +31,10 @@ function OperationsSectionSuspense() {
     { getNextPageParam: (page) => page.nextCursor },
   );
 
+  if (query.isError) {
+    toast.error("An unknown error occurred");
+  }
+
   if (entries.pages[0]?.reason === "NO_ACTIVE_SHIFT") {
     return <div>No active shift yet.</div>;
   }
@@ -37,23 +42,6 @@ function OperationsSectionSuspense() {
   const items = entries.pages.flatMap((page) => page.items);
   logger.warn(items);
   return (
-    <div>
-      <DataTable columns={columns} data={items} InfiniteScrollProps={query} />
-      {/* <div className="flex flex-col gap-2 md:w-[70vw]">
-        <div className="grid grid-cols-4 gap-x-4 border-b py-2">
-          <div>{"Entrée"}</div>
-          <div>{"Montant"}</div>
-          <div>{"date"}</div>
-          <div>{"userId"}</div>
-        </div>
-        {items.length === 0 ? (
-          <div className="text-muted-foreground py-4 text-center">
-            Aucun enregistrement pour ce shift
-          </div>
-        ) : (
-          items.map((entry) => <OperationRow key={entry.id} entry={entry} />)
-        )}
-      </div> */}
-    </div>
+    <DataTable columns={columns} data={items} InfiniteScrollProps={query} />
   );
 }

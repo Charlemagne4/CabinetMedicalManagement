@@ -1,9 +1,19 @@
+import { Users } from "lucide-react";
+import AddUserFormModal from "../components/AddUserFormModal";
 import UsersSection from "../Sections/UsersSection";
+import SectionHeader from "@/components/SectionHeader";
 
 function UsersView() {
   return (
-    <div>
-      <h1>Utilisateurs</h1>
+    <div className="mx-auto mb-10 flex max-w-[2400px] flex-col gap-y-6 px-4 pt-2.5">
+      <div className="flex justify-between">
+        <SectionHeader
+          icon={Users}
+          title="Utilisateurs"
+          description="Gérez les comptes et statuts des utilisateurs."
+        />
+        <AddUserFormModal />
+      </div>
       <UsersSection />
     </div>
   );

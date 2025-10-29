@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { type z } from "zod";
 import { Form } from "@/components/ui/form";
 import MyForm from "./MyForm";
 import { signUpFormSchema as formSchema } from "./Schema";
@@ -14,16 +14,22 @@ import { toast } from "sonner";
 import { Suspense } from "react";
 import { api } from "@/trpc/react";
 
-export function SignUp() {
+export function SignUp({
+  setEntryModalOpen,
+}: {
+  setEntryModalOpen: (open: boolean) => void;
+}) {
   const { data: session, status } = useSession();
   const register = api.users.register.useMutation();
+
+  const utils = api.useUtils();
 
   const searchParams = useSearchParams();
   const callbackUrl = decodeURIComponent(
     searchParams?.get("callbackUrl") ?? "/",
   );
 
-  if (session) {
+  if (session && session.user.role !== "admin") {
     redirect("/");
   }
 
@@ -46,13 +52,15 @@ export function SignUp() {
     register.mutate(
       { email, password, username: name },
       {
-        onSuccess: async () => {
-          const res = await signIn("credentials", {
+        onSuccess: () => {
+          void utils.users.getMany.invalidate();
+          setEntryModalOpen(false);
+          if (session?.user.role === "admin") return;
+          void signIn("credentials", {
             email,
             password,
             callbackUrl: callbackUrl,
           });
-
         },
         onError: (error) => {
           toast.error(`Register failed: ${error.message}`);
@@ -75,10 +83,15 @@ export function SignUp() {
   return (
     <Suspense>
       <div className="">
-        <h1>Sign Up</h1>
-        <div className="rounded">
+        {session?.user.role === "admin" ? (
+          "Entrez info Utilisateur"
+        ) : (
+          <h1>Sign Up</h1>
+        )}
+
+        <div className="min-w-80 rounded">
           <Form {...form}>
-            <div className="mb-4 flex gap-20">
+            {/* <div className="mb-4 flex gap-20">
               <Button
                 onClick={() => signIn("github", { callbackUrl: callbackUrl })}
               >
@@ -89,9 +102,9 @@ export function SignUp() {
               >
                 Sign in with Discord
               </Button>
-            </div>
+            </div> */}
 
-            <MyForm form={form} onSubmit={onSubmit} />
+            <MyForm mode={null} form={form} onSubmit={onSubmit} />
           </Form>
         </div>
       </div>

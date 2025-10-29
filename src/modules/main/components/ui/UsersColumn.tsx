@@ -141,31 +141,34 @@ export const UsersColumn: ColumnDef<entry>[] = [
       return <div className="text-left">{formatedDate}</div>;
     },
   },
-  // {
-  //   accessorKey: "label",
-  //   header: ({ column }) => {
-  //     return (
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //       >
-  //         Utilisateur
-  //         {column.getIsSorted() === "asc" ? (
-  //           <ArrowUp className="ml-2 h-4 w-4" />
-  //         ) : column.getIsSorted() === "desc" ? (
-  //           <ArrowDown className="ml-2 h-4 w-4" />
-  //         ) : (
-  //           <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-  //         )}
-  //       </Button>
-  //     );
-  //   },
-  //   cell: ({ row }) => {
-  //     const entry = row.original;
-  //     logger.debug(entry);
-  //     return <div className="truncate">{entry.name}</div>;
-  //   },
-  // },
+  {
+    accessorKey: "operations",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Operations Introduit
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const entry = row.original;
+      return (
+        <div className="mr-10 truncate text-right">
+          {entry._count.Operation}
+        </div>
+      );
+    },
+  },
   {
     id: "action",
     cell: ({ row }) => {

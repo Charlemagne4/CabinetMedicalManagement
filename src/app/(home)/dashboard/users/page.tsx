@@ -7,11 +7,9 @@ export const dynamic = "force-dynamic";
 function page() {
   void api.users.getMany.prefetchInfinite({ limit: DEFAULT_LIMIT });
   return (
-    <div>
-      <HydrateClient>
-        <UsersView />
-      </HydrateClient>
-    </div>
+    <HydrateClient>
+      <UsersView />
+    </HydrateClient>
   );
 }
 export default page;

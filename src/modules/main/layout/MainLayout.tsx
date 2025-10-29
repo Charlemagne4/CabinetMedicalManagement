@@ -9,7 +9,7 @@ function MainLayout({ children }: { children: ReactNode }) {
   return (
     <div className="">
       <SidebarProvider>
-        <div className="w-full min-w-screen flex-col">
+        <div className="w-full min-w-full flex-col">
           <HomeNavbar />
           <div className="flex h-screen">
             <HomeSidebar />
