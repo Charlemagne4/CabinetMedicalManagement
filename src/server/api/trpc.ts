@@ -14,6 +14,7 @@ import { ZodError } from "zod";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { logger } from "@/utils/pino";
+import { ratelimit } from "@/lib/ratelimit";
 
 /**
  * 1. CONTEXT
@@ -146,14 +147,14 @@ export const protectedProcedure = t.procedure
       });
     }
 
-    // const { success } = await ratelimit.limit(user.id);
+    const { success } = await ratelimit.limit(user.id);
 
-    // if (!success) {
-    //   throw new TRPCError({
-    //     code: "TOO_MANY_REQUESTS",
-    //     message: "Calm down, Too many requests",
-    //   });
-    // }
+    if (!success) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: "Calm down, Too many requests",
+      });
+    }
     return next({
       ctx: {
         // infers the `session` as non-nullable

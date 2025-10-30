@@ -15,6 +15,62 @@ const entrySchema = z.discriminatedUnion("Entrytype", [
 ]);
 
 export const entriesRouter = createTRPCRouter({
+  getCredits: protectedProcedure
+    .input(
+      z.object({
+        cursor: z
+          .object({
+            id: z.string(),
+            date: z.date(),
+          })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { db } = ctx;
+      const { limit, cursor } = input;
+
+      const data = await db.operation.findMany({
+        where: {
+          Consultation: { credit: { isNot: null } },
+        },
+        include: {
+          Shift: true,
+          Consultation: { include: { credit: true } },
+          user: {
+            select: { name: true, role: true, email: true, id: true },
+          },
+        },
+        orderBy: [
+          { date: "desc" },
+          { id: "desc" }, // secondary key for stable ordering
+        ],
+        take: limit + 1, // fetch one extra to check if there's more
+        ...(cursor
+          ? {
+              cursor: { date: cursor.date, id: cursor.id },
+              skip: 1,
+            }
+          : {}),
+      });
+      const hasMore = data.length > limit;
+      //remove last item if there is more data
+      const items = hasMore ? data.slice(0, -1) : data;
+      // set the next cursor to the last item if there is more data
+      const lastItem = items[items.length - 1];
+
+      return {
+        items,
+        nextCursor:
+          hasMore && lastItem
+            ? {
+                id: lastItem.id,
+                date: lastItem.date,
+              }
+            : null,
+      };
+    }),
   getActivitySummary: protectedProcedure.query(async ({ ctx }) => {
     const shift = await getCurrentShift();
     if (!shift) return null;

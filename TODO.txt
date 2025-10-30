@@ -19,10 +19,9 @@ pay the credit funtion ✅
 badge payé pour les credit payé ✅
 dashboard link multiple inside menu for credits and users
 badge for types of entries in main instead if colored divs ✅
-dashboard 
+dashboard ✅
 charts par mois
 check include user true in api 
-endShift function on logout but when a shift can be started 
 Dark mode/light mode check with the custom colors 
 update auth when logged in maybe ?
 rate limiting

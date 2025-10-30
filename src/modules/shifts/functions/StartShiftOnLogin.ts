@@ -107,7 +107,9 @@ export async function getCurrentShift() {
       ],
     },
     include: {
-      user: true,
+      user: {
+        select: { name: true, role: true, email: true, id: true },
+      },
       template: true,
       recettes: true,
       expenses: true,
@@ -142,7 +144,9 @@ export async function getCurrentShift() {
       OR: [{ endTime: null }, { endTime: { isSet: false } }],
     },
     include: {
-      user: true,
+      user: {
+        select: { name: true, role: true, email: true, id: true },
+      },
       template: true,
       consultations: { include: { credit: true } },
       recettes: true,

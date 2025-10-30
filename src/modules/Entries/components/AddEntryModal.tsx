@@ -21,6 +21,7 @@ function AddEntryModal() {
         utils.shifts.getCurrent.invalidate(),
         utils.shifts.getMany.invalidate(),
         utils.shifts.getShiftOperations.invalidate({ shiftId }),
+        utils.entries.getCredits.invalidate(),
       ]);
       setEntryModalOpen(false);
     },

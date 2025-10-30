@@ -17,9 +17,10 @@ import { logger } from "@/utils/pino";
 import type { EntryType, Prisma } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type badgeVariants } from "@/components/ui/badge";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
+import type { VariantProps } from "class-variance-authority";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -30,6 +31,7 @@ export type entry = Prisma.OperationGetPayload<{
     user: { select: { name: true; role: true; email: true; id: true } };
   };
 }>;
+type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 
 // export type entry = {
 //   id: string;
@@ -69,19 +71,16 @@ export const columns: ColumnDef<entry>[] = [
           <span className="truncate">{entryLabel}</span>
 
           <Badge
-            className={cn(
-              (() => {
-                if (entry.Consultation?.type === "BILAN") return "bg-blue-600";
-                if (entry.Consultation?.type === "CONSULTATION")
-                  return "bg-green-600";
-                return "bg-red-600";
-              })(), // 👈 function is immediately called
-            )}
+            variant={((): BadgeVariant => {
+              if (entry.Consultation?.type === "BILAN") return "credit";
+              if (entry.Consultation?.type === "CONSULTATION") return "credit";
+              return "destructive";
+            })()}
           >
             {entry.Consultation?.type ?? entryType}
           </Badge>
           {entry.Consultation?.credit?.isPaid === false && (
-            <Badge className="bg-yellow-500">Credit</Badge>
+            <Badge variant={"credit"}>Credit</Badge>
           )}
           {entry.Consultation?.credit &&
             entry.Consultation?.credit?.isPaid === true && (

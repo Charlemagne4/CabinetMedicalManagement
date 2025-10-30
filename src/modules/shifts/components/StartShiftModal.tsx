@@ -25,6 +25,8 @@ function StartShiftModal() {
       await utils.entries.invalidate();
       await utils.shifts.getCurrent.invalidate();
       await utils.shifts.getMany.invalidate();
+      await utils.entries.getCredits.invalidate();
+
       setShiftStartModalOpen(false);
       setCashFund("");
     },
