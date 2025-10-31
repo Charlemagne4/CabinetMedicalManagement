@@ -20,10 +20,14 @@ badge payé pour les credit payé ✅
 dashboard link multiple inside menu for credits and users
 badge for types of entries in main instead if colored divs ✅
 dashboard ✅
+check include user true in api ✅
+rate limiting ✅
+signin proper error handling ✅
 charts par mois
-check include user true in api 
 Dark mode/light mode check with the custom colors 
 update auth when logged in maybe ?
-rate limiting
 search of individual datatable should query db 
-change password
+change user passwords for admin
+edit entry 
+badge rework
+assign shift template to a user

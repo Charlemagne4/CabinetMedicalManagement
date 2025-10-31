@@ -2,8 +2,10 @@ import SignIn from "@/modules/auth/ui/components/MyForm/SignIn";
 
 function page() {
   return (
-    <div>
-      <SignIn />
+    <div className="flex h-screen items-center justify-center">
+      <div className="w-80">
+        <SignIn />
+      </div>
     </div>
   );
 }

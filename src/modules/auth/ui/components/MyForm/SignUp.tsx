@@ -17,7 +17,7 @@ import { api } from "@/trpc/react";
 export function SignUp({
   setEntryModalOpen,
 }: {
-  setEntryModalOpen: (open: boolean) => void;
+  setEntryModalOpen?: (open: boolean) => void;
 }) {
   const { data: session, status } = useSession();
   const register = api.users.register.useMutation();
@@ -54,8 +54,8 @@ export function SignUp({
       {
         onSuccess: () => {
           void utils.users.getMany.invalidate();
-          setEntryModalOpen(false);
-          if (session?.user.role === "admin") return;
+          if (setEntryModalOpen) setEntryModalOpen(false);
+          if (session?.user?.role === "admin") return;
           void signIn("credentials", {
             email,
             password,

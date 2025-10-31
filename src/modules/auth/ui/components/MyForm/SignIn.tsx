@@ -10,6 +10,8 @@ import { useEffect, useState } from "react";
 import { redirect, useRouter, useSearchParams } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2Icon, PopcornIcon, AlertCircleIcon } from "lucide-react";
 // import { logger } from "@/utils/pino";
 
 // interface Props {
@@ -37,6 +39,9 @@ export function SignIn() {
     if (authError) {
       if (authError === "OAuthAccountNotLinked") {
         setError("That email is already linked to another provider.");
+      }
+      if (authError === "CredentialsSignin") {
+        setError("mot de passe ou email erroné");
       } else {
         setError(`Sign in error: ${authError}`);
       }
@@ -91,9 +96,27 @@ export function SignIn() {
               </Button>
             </div> */}
 
-            <MyForm form={form} onSubmit={onSubmit} />
+            <MyForm form={form} onSubmit={onSubmit} mode={null} />
           </Form>
-          {error && <h6 className="bg-red-600 p-2 text-white">{error}</h6>}
+          {error && (
+            <div className="mt-2 grid w-full max-w-xl items-start gap-4">
+              <Alert variant="destructive">
+                <AlertCircleIcon />
+                <AlertTitle>Échec de la connexion</AlertTitle>
+                <AlertDescription>
+                  <p>
+                    Impossible de vous connecter. Veuillez vérifier vos
+                    informations d’identification et réessayer.
+                  </p>
+                  <ul className="list-inside list-disc text-sm">
+                    <li>Vérifiez votre adresse e-mail</li>
+                    <li>Vérifiez votre mot de passe</li>
+                    <li>Assurez-vous que votre compte est actif</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
         </div>
       </div>
     );
