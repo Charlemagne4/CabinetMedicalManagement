@@ -6,7 +6,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -16,7 +20,13 @@ import { cn } from "@/lib/utils";
 import { logger } from "@/utils/pino";
 import type { EntryType, Prisma } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Check,
+  MoreHorizontal,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
@@ -24,7 +34,7 @@ import { toast } from "sonner";
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
 export type entry = Prisma.UserGetPayload<{
-  include: { _count: { select: { Operation: true } } };
+  include: { _count: { select: { Operation: true } }; ShiftTemplates: true };
   omit: {
     password: true;
     emailVerified: true;
@@ -170,6 +180,18 @@ export const UsersColumn: ColumnDef<entry>[] = [
     },
   },
   {
+    id: "shift",
+    header: "Shifts",
+    cell: ({ row }) => {
+      const entry = row.original;
+      const shifts = entry.ShiftTemplates.map(
+        (ShiftType) => ShiftType.type,
+      ).join("/");
+
+      return <span className="mr-10">{shifts}</span>;
+    },
+  },
+  {
     id: "action",
     cell: ({ row }) => {
       const entry = row.original;
@@ -178,6 +200,15 @@ export const UsersColumn: ColumnDef<entry>[] = [
       const switchUser = api.users.switchActivate.useMutation({
         onSuccess: async ({ activated, name }) => {
           toast.success(`${name} ${activated ? "Activé" : "Désactivé"}`);
+          await utils.users.getMany.invalidate();
+        },
+        onError: (err) => {
+          toast.error(err.message);
+        },
+      });
+      const assignShift = api.users.assignshift.useMutation({
+        onSuccess: async () => {
+          // toast.success(`${name} ${activated ? "Activé" : "Désactivé"}`);
           await utils.users.getMany.invalidate();
         },
         onError: (err) => {
@@ -203,6 +234,33 @@ export const UsersColumn: ColumnDef<entry>[] = [
               Copy email
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Assigner Shift</DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      assignShift.mutate({ type: "MATIN", userId: entry.id })
+                    }
+                  >
+                    Matin
+                    {entry.ShiftTemplates?.find((a) => a.type === "MATIN") && (
+                      <Check />
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      assignShift.mutate({ type: "SOIR", userId: entry.id })
+                    }
+                  >
+                    Soir
+                    {entry.ShiftTemplates?.find((a) => a.type === "SOIR") && (
+                      <Check />
+                    )}
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
             <DropdownMenuItem
               variant="destructive"
               onClick={() => switchUser.mutate({ userId: entry.id })}

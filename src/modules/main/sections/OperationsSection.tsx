@@ -11,11 +11,12 @@ import { DataTable } from "../components/ui/DataTable";
 import { columns } from "../components/ui/Columns";
 import { logger } from "@/utils/pino";
 import { toast } from "sonner";
+import { TrpcErrorFallback } from "@/components/TrpcErrorFallback";
 
 function OperationsSection() {
   return (
     <Suspense fallback={<p>Loading operations...</p>}>
-      <ErrorBoundary fallback={<p>Error in Operations</p>}>
+      <ErrorBoundary FallbackComponent={TrpcErrorFallback}>
         <OperationsSectionSuspense />
       </ErrorBoundary>
     </Suspense>

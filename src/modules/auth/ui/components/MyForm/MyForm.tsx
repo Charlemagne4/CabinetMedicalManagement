@@ -28,7 +28,12 @@ function MyForm<T extends { email: string; password: string; name?: string }>({
         <MyFormField form={form} name="name" placeholder="Name" />
       )}
       <MyFormField form={form} name="email" placeholder="Email" />
-      <MyFormField form={form} name="password" placeholder="Password" />
+      <MyFormField
+        form={form}
+        password={true}
+        name="password"
+        placeholder="Password"
+      />
       <div className="flex items-center justify-around">
         <Button type="submit">Submit</Button>
         {mode && (

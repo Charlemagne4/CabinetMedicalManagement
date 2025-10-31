@@ -5,8 +5,86 @@ import { generateSalt, hashPassword } from "@/utils/passwordHasher";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { logger } from "@/utils/pino";
 import { now } from "@/lib/daysjs";
+import { ShiftType } from "@prisma/client";
 
 export const usersRouter = createTRPCRouter({
+  assignshift: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        type: z.nativeEnum(ShiftType), // one value
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db } = ctx;
+      const { type: templateType, userId } = input;
+
+      // 1) Find the template by its type
+      const template = await ctx.db.shiftTemplate.findFirst({
+        where: { type: templateType },
+        select: { id: true, userIDs: true },
+      });
+      if (!template) {
+        throw new Error(`ShiftTemplate with type ${templateType} not found`);
+      }
+      const templateId = template.id;
+
+      // 2) Get the user’s current ShiftTemplatesIDs
+      const user = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: { ShiftTemplatesIDs: true },
+      });
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      const alreadyLinked = user.ShiftTemplatesIDs.includes(templateId);
+
+      if (alreadyLinked) {
+        // Remove link
+        await ctx.db.user.update({
+          where: { id: userId },
+          data: {
+            ShiftTemplatesIDs: {
+              set: user.ShiftTemplatesIDs.filter((id) => id !== templateId),
+            },
+          },
+        });
+
+        await ctx.db.shiftTemplate.update({
+          where: { id: templateId },
+          data: {
+            userIDs: {
+              set: template.userIDs.filter((id) => id !== userId),
+            },
+          },
+        });
+
+        logger.debug({ status: "removed", templateType });
+        return { status: "removed", templateType };
+      } else {
+        // Add link
+        await ctx.db.user.update({
+          where: { id: userId },
+          data: {
+            ShiftTemplatesIDs: {
+              push: templateId,
+            },
+          },
+        });
+
+        await ctx.db.shiftTemplate.update({
+          where: { id: templateId },
+          data: {
+            userIDs: {
+              push: userId,
+            },
+          },
+        });
+        logger.debug({ status: "added", templateType });
+        return { status: "added", templateType };
+      }
+    }),
   switchActivate: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -60,7 +138,10 @@ export const usersRouter = createTRPCRouter({
 
       const data = await db.user.findMany({
         where: { role: "user" },
-        include: { _count: { select: { Operation: true } } },
+        include: {
+          _count: { select: { Operation: true } },
+          ShiftTemplates: true,
+        },
         omit: {
           password: true,
           emailVerified: true,

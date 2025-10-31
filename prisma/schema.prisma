@@ -21,11 +21,13 @@ model User {
     createdAt DateTime
     updatedAt DateTime @updatedAt
 
-    role      Role        @default(user)
-    Shift     Shift[]
-    Operation Operation[]
-    Credit    Credit[]
-    activated Boolean     @default(false)
+    role              Role            @default(user)
+    Shift             Shift[]
+    Operation         Operation[]
+    Credit            Credit[]
+    activated         Boolean         @default(false)
+    ShiftTemplatesIDs String[]        @db.ObjectId
+    ShiftTemplates    ShiftTemplate[] @relation(fields: [ShiftTemplatesIDs], references: [id])
 }
 
 enum Role {
@@ -105,8 +107,10 @@ model ShiftTemplate {
     name      String // "Morning", "Evening", etc.
     startHour Int // 8 for 08:00
     endHour   Int // 14 for 14:00
-    type      ShiftType
+    type      ShiftType @unique
     Shift     Shift[]
+    userIDs   String[]  @db.ObjectId
+    posts     User[]    @relation(fields: [userIDs], references: [id])
 }
 
 model CashFund {

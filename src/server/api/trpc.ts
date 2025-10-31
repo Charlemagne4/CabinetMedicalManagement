@@ -48,10 +48,17 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
+    // Only expose the message for specific tRPC codes
+    const safeErrorCodes = ["FORBIDDEN", "UNAUTHORIZED", "NOT_FOUND"];
+
+    const isSafe = safeErrorCodes.includes(error.code);
+    const message = isSafe ? error.message : "Something went wrong";
     return {
       ...shape,
+      message,
       data: {
         ...shape.data,
+        message,
         zodError:
           error.cause instanceof ZodError ? error.cause.flatten() : null,
       },
@@ -138,12 +145,14 @@ export const protectedProcedure = t.procedure
       throw new TRPCError({
         code: "UNAUTHORIZED",
         message: "Must be logged In",
+        cause: "auth",
       });
     }
     if (!user.activated) {
       throw new TRPCError({
-        code: "UNAUTHORIZED",
+        code: "FORBIDDEN",
         message: "Account not activated",
+        cause: "activation",
       });
     }
 

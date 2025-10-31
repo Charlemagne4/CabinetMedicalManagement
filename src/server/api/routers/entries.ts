@@ -350,11 +350,24 @@ export const entriesRouter = createTRPCRouter({
     )
     .query(async ({ input, ctx }) => {
       const { limit, cursor } = input;
-      const { id: userId } = ctx.session.user;
+      const { id: userId, role } = ctx.session.user;
       const currentShift = await getCurrentShift();
 
       if (!currentShift) return { items: [], reason: "NO_ACTIVE_SHIFT" };
+      if (role !== "admin") {
+        const currentUser = await db.user.findUnique({
+          where: { id: userId },
+          include: { ShiftTemplates: true },
+        });
 
+        if (
+          !currentUser?.ShiftTemplatesIDs.find(
+            (userShiftTemplate) =>
+              userShiftTemplate === currentShift.templateId,
+          )
+        )
+          return { items: [], reason: "Pas de shift Assigné" };
+      }
       logger.debug(userId);
       // if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 

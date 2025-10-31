@@ -60,7 +60,7 @@ export function SignIn() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const res = await signIn("credentials", {
-        email: values.email,
+        email: values.email.trim(),
         password: values.password,
         redirectTo: callbackUrl,
       });

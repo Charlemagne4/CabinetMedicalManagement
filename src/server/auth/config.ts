@@ -1,5 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import {
+  CredentialsSignin,
   type JWT,
   type NextAuthConfig,
   type Session,
@@ -77,7 +78,8 @@ export const authConfig = {
         // logger.debug(`User in db: ${user?.email}`);
 
         if (!user) throw new Error("Invalid credentials.");
-
+        if (!user.activated)
+          throw new CredentialsSignin("Account not activated");
         if (!user.password || !user.salt || !credentials?.password) {
           // logger.warn("Missing credentials or user data during login attempt");
           return null;
