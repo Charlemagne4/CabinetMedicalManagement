@@ -75,7 +75,7 @@ export const authConfig = {
         });
         // logger.debug(`User in db: ${user?.email}`);
 
-        if (!user) throw new Error("Invalid credentials.");
+        if (!user) throw new CredentialsSignin("Account not activated");
         if (!user.activated)
           throw new CredentialsSignin("Account not activated");
         if (!user.password || !user.salt || !credentials?.password) {
