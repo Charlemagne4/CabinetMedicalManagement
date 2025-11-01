@@ -22,7 +22,7 @@ export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request, secret });
   const role = token?.role;
 
-  logger.debug({ token }, "Token");
+  console.log("Token from middleware", token);
   const isAdminRoute = adminRoutes.some((r) => pathname.startsWith(r));
   const isProtectedRoute = protectedRoutes.some((r) => pathname.startsWith(r));
 
