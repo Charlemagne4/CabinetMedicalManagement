@@ -1,8 +1,6 @@
-import { getToken } from "next-auth/jwt";
 import { type NextRequest, NextResponse } from "next/server";
 import { logger } from "./utils/pino";
-
-const secret = process.env.AUTH_SECRET;
+import { auth } from "./server/auth";
 
 const protectedRoutes = ["/main"];
 const adminRoutes = ["/dashboard"];
@@ -19,25 +17,27 @@ function redirectToSignin(pathname: string, origin: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname, origin } = request.nextUrl;
-  const token = await getToken({ req: request, secret });
-  const role = token?.role;
 
-  console.log("Token from middleware", token);
+  // Get session from Auth.js (Edge compatible)
+  const session = await auth();
+  const role = session?.user?.role;
+
+  logger.info({ session }, "Session from middleware");
+
   const isAdminRoute = adminRoutes.some((r) => pathname.startsWith(r));
   const isProtectedRoute = protectedRoutes.some((r) => pathname.startsWith(r));
 
-  // Handle admin routes first
+  // Admin routes
   if (isAdminRoute) {
-    if (!token) return redirectToSignin(pathname, origin);
+    if (!session) return redirectToSignin(pathname, origin);
     if (role !== "admin") return NextResponse.redirect(new URL("/", origin));
   }
 
-  // Handle other protected routes
-  if (isProtectedRoute && !token) {
+  // Protected routes
+  if (isProtectedRoute && !session) {
     return redirectToSignin(pathname, origin);
   }
 
-  // Allow all other requests
   return NextResponse.next();
 }
 
