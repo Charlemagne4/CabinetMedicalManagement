@@ -17,8 +17,8 @@ export default function SectionHeader({
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3">
-        <Icon className="h-6 w-6 text-gray-400" />
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-100">
+        <Icon className="h-6 w-6 text-secondary-foreground" />
+        <h1 className="text-2xl font-semibold tracking-tight text-secondary-foreground">
           {title}
         </h1>
       </div>

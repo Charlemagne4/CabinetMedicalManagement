@@ -1,10 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  LogOutIcon,
-  UserCircleIcon,
-} from "lucide-react";
+import { LogOutIcon, UserCircleIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 
@@ -80,26 +77,26 @@ function AuthButton() {
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="">
-          <DropdownMenuItem variant="default">
-            {/* <Link
+          {/* <DropdownMenuItem variant="default">
+            <Link
               prefetch
               href={`/users/${session.user.id}`}
               className="flex items-center gap-3 text-lg"
             >
               <UserIcon size={20} />
               Profile
-            </Link> */}
-          </DropdownMenuItem>
-          <DropdownMenuItem variant="default">
-            {/* <Link
+            </Link>
+          </DropdownMenuItem> */}
+          {/* <DropdownMenuItem variant="default">
+            <Link
               prefetch
               href={"/studio"}
               className="flex items-center gap-3 text-lg"
             >
               <ClapperboardIcon size={20} />
               Studio
-            </Link> */}
-          </DropdownMenuItem>
+            </Link>
+          </DropdownMenuItem> */}
           <DarkModeToggler />
           <DropdownMenuItem
             variant="destructive"
