@@ -1,6 +1,7 @@
+import { getToken } from "next-auth/jwt";
 import { type NextRequest, NextResponse } from "next/server";
-import { logger } from "./utils/pino";
-import { auth } from "./server/auth";
+
+const secret = process.env.AUTH_SECRET;
 
 const protectedRoutes = ["/main"];
 const adminRoutes = ["/dashboard"];
@@ -17,27 +18,34 @@ function redirectToSignin(pathname: string, origin: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname, origin } = request.nextUrl;
+  const isProduction = process.env.NODE_ENV === "production";
 
-  // Get session from Auth.js (Edge compatible)
-  const session = await auth();
-  const role = session?.user?.role;
+  const token = await getToken({
+    req: request,
+    secret,
+    cookieName: isProduction
+      ? "__Secure-authjs.session-token"
+      : "authjs.session-token",
+    secureCookie: isProduction,
+  });
+  const role = token?.role;
 
-  logger.info({ session }, "Session from middleware");
-
+  console.log("Token from middleware", token);
   const isAdminRoute = adminRoutes.some((r) => pathname.startsWith(r));
   const isProtectedRoute = protectedRoutes.some((r) => pathname.startsWith(r));
 
-  // Admin routes
+  // Handle admin routes first
   if (isAdminRoute) {
-    if (!session) return redirectToSignin(pathname, origin);
+    if (!token) return redirectToSignin(pathname, origin);
     if (role !== "admin") return NextResponse.redirect(new URL("/", origin));
   }
 
-  // Protected routes
-  if (isProtectedRoute && !session) {
+  // Handle other protected routes
+  if (isProtectedRoute && !token) {
     return redirectToSignin(pathname, origin);
   }
 
+  // Allow all other requests
   return NextResponse.next();
 }
 
