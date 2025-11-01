@@ -1,7 +1,6 @@
 "use client";
 import ResponsiveModal from "@/components/ResponsiveModal";
 import { Button } from "@/components/ui/button";
-import SignIn from "@/modules/auth/ui/components/MyForm/SignIn";
 import SignUp from "@/modules/auth/ui/components/MyForm/SignUp";
 import { useState } from "react";
 

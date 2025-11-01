@@ -49,7 +49,7 @@ function AddEntryModal() {
         onClick={() => setEntryModalOpen(true)}
         disabled={create.isPending}
       >
-        Create
+        Ajouter operation
       </Button>
     </>
   );

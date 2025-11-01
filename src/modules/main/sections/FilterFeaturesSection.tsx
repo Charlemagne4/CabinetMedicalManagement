@@ -4,11 +4,9 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { Sidebar } from "lucide-react";
 import { useState } from "react";
 
 const categories = [

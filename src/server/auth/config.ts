@@ -1,20 +1,18 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import {
   CredentialsSignin,
-  type JWT,
   type NextAuthConfig,
   type Session,
   type User,
 } from "next-auth";
-
 import Credentials from "next-auth/providers/credentials";
 
 import { db } from "@/server/db";
-import { prisma } from "prisma/prisma";
 import { comparePasswords } from "@/utils/passwordHasher";
 import { signInFormSchema } from "@/modules/auth/ui/components/MyForm/Schema";
 import { logger } from "@/utils/pino";
-import type { Role } from "@prisma/client";
+import { type Role } from "@prisma/client";
+import type { JWT } from "next-auth/jwt";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -72,7 +70,7 @@ export const authConfig = {
         const { email, password } =
           await signInFormSchema.parseAsync(credentials);
         // Add logic here to look up the user from the credentials supplied
-        const user = await prisma.user.findUnique({
+        const user = await db.user.findUnique({
           where: { email },
         });
         // logger.debug(`User in db: ${user?.email}`);
@@ -117,13 +115,13 @@ export const authConfig = {
       }
       return token;
     },
-    async session({ session, token }: { token: JWT; session: Session }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       return {
         ...session,
         user: {
           ...session.user,
           id: token.id!,
-          role: token.role!,
+          role: token.role! as Role,
         },
       };
     },

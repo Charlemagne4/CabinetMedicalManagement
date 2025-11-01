@@ -14,11 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { Checkbox } from "@/components/ui/checkbox";
-
-import { cn } from "@/lib/utils";
-import { logger } from "@/utils/pino";
-import type { EntryType, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
 import {
   ArrowDown,
@@ -27,7 +23,6 @@ import {
   Check,
   MoreHorizontal,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import ResetUserPasswordModal from "@/modules/users/components/ResetUserPasswordModal";
@@ -211,15 +206,6 @@ export const UsersColumn: ColumnDef<entry>[] = [
         onSuccess: async () => {
           // toast.success(`${name} ${activated ? "Activé" : "Désactivé"}`);
           await utils.users.getMany.invalidate();
-        },
-        onError: (err) => {
-          toast.error(err.message);
-        },
-      });
-      const resetPassword = api.users.resetPassword.useMutation({
-        onSuccess: async () => {
-          // toast.success(`${name} ${activated ? "Activé" : "Désactivé"}`);
-          // await utils.users.getMany.invalidate();
         },
         onError: (err) => {
           toast.error(err.message);

@@ -1,6 +1,5 @@
 "use client";
 
-import { TrendingUp } from "lucide-react";
 import { Pie, PieChart } from "recharts";
 import {
   Card,
@@ -60,7 +59,7 @@ function DataChartSuspense() {
       <CardContent className="flex-1 pb-0">
         <ChartContainer
           config={chartConfig}
-          className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square md:h-[400px] pb-0"
+          className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square pb-0 md:h-[400px]"
         >
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent hideLabel />} />

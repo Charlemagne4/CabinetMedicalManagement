@@ -7,11 +7,10 @@ import { Form } from "@/components/ui/form";
 import MyForm from "./MyForm";
 import { signInFormSchema as formSchema } from "./Schema";
 import { useEffect, useState } from "react";
-import { redirect, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2Icon, PopcornIcon, AlertCircleIcon } from "lucide-react";
+import { AlertCircleIcon } from "lucide-react";
 // import { logger } from "@/utils/pino";
 
 // interface Props {
@@ -59,7 +58,7 @@ export function SignIn() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const res = await signIn("credentials", {
+      await signIn("credentials", {
         email: values.email.trim(),
         password: values.password,
         redirectTo: callbackUrl,

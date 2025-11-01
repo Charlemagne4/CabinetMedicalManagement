@@ -2,10 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  ClapperboardIcon,
   LogOutIcon,
   UserCircleIcon,
-  UserIcon,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
@@ -68,8 +66,10 @@ function AuthButton() {
           className="text-md flex overflow-hidden rounded-full border-none font-medium text-blue-800 shadow-none hover:text-blue-500 focus:outline-none"
           // aria-haspopup="true"
         >
-          <div className="flex items-center justify-center gap-3">
-            <p className="hidden md:block">{session.user?.name ?? "User"}</p>
+          <div className="bg-card flex items-center justify-center gap-3">
+            <p className="text-primary border-primary hidden p-1 md:block">
+              {session.user?.name ?? "User"}
+            </p>
             <Image
               className="rounded-full object-contain"
               src={session.user?.image ?? USER_IMAGE_FALLBACK} // TODO:Use a default image if not available
@@ -81,24 +81,24 @@ function AuthButton() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="">
           <DropdownMenuItem variant="default">
-            <Link
+            {/* <Link
               prefetch
               href={`/users/${session.user.id}`}
               className="flex items-center gap-3 text-lg"
             >
               <UserIcon size={20} />
               Profile
-            </Link>
+            </Link> */}
           </DropdownMenuItem>
           <DropdownMenuItem variant="default">
-            <Link
+            {/* <Link
               prefetch
               href={"/studio"}
               className="flex items-center gap-3 text-lg"
             >
               <ClapperboardIcon size={20} />
               Studio
-            </Link>
+            </Link> */}
           </DropdownMenuItem>
           <DarkModeToggler />
           <DropdownMenuItem

@@ -71,7 +71,7 @@ export const entriesRouter = createTRPCRouter({
             : null,
       };
     }),
-  getActivitySummary: protectedProcedure.query(async ({ ctx }) => {
+  getActivitySummary: protectedProcedure.query(async ({}) => {
     const shift = await getCurrentShift();
     if (!shift) return null;
 
@@ -232,7 +232,7 @@ export const entriesRouter = createTRPCRouter({
           });
 
         // 2️⃣ Upsert the credit (one per consultation)
-        const credit = await tx.credit.upsert({
+        await tx.credit.upsert({
           where: { consultationId: consultation.id },
           create: {
             isPaid: false,
@@ -277,7 +277,7 @@ export const entriesRouter = createTRPCRouter({
     .input(z.object({ creditId: z.string().nullish() }))
     .mutation(async ({ input, ctx }) => {
       const { creditId } = input;
-      const { db, session } = ctx;
+      const { db } = ctx;
 
       const currentShift = await getCurrentShift();
       if (!creditId) {
@@ -315,7 +315,7 @@ export const entriesRouter = createTRPCRouter({
             code: "BAD_REQUEST",
             message: "pas de credit pour cette operation",
           });
-        const recette = await tx.recette.update({
+        await tx.recette.update({
           where: { id: currentShift.recettes?.id },
           data: {
             totalAmount: { increment: foundCredit.amount },
@@ -469,8 +469,6 @@ async function addEntry(
   currentRecettesId: string | undefined,
 ) {
   return await db.$transaction(async (tx) => {
-    //entering in Entry table
-    let refId: string;
     let consultation;
     //entering in operation table
     const operation = await tx.operation.create({
@@ -510,11 +508,10 @@ async function addEntry(
             },
           });
         }
-        refId = consultation.id;
         break;
       }
       case "DEPENSE": {
-        const depense = await tx.depense.create({
+        await tx.depense.create({
           data: {
             date: now().toDate(),
             shiftId,
@@ -523,7 +520,6 @@ async function addEntry(
             label: entry.label,
           },
         });
-        refId = depense.id;
         break;
       }
       default:

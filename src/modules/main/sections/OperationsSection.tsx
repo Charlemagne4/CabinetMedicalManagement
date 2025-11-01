@@ -1,12 +1,9 @@
 "use client";
-import InfiniteScroll from "@/components/InfiniteScroll";
 import { DEFAULT_LIMIT } from "@/constants";
 import { api } from "@/trpc/react";
-import { useSession } from "next-auth/react";
 import { Suspense } from "react";
 
 import { ErrorBoundary } from "react-error-boundary";
-import OperationRow from "../components/ui/OperationRow";
 import { DataTable } from "../components/ui/DataTable";
 import { columns } from "../components/ui/Columns";
 import { logger } from "@/utils/pino";

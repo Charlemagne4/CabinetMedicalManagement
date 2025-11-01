@@ -2,7 +2,7 @@ import { prisma } from "../../../../prisma/prisma";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { generateSalt, hashPassword } from "@/utils/passwordHasher";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { logger } from "@/utils/pino";
 import { now } from "@/lib/daysjs";
 import { ShiftType } from "@prisma/client";
@@ -25,7 +25,7 @@ export const usersRouter = createTRPCRouter({
       const salt = generateSalt();
       const hashed = await hashPassword(password, salt);
 
-      const updatedUser = await db.user.update({
+      await db.user.update({
         where: { id: userId },
         data: { password: hashed, salt },
       });
@@ -43,7 +43,7 @@ export const usersRouter = createTRPCRouter({
       const { type: templateType, userId } = input;
 
       // 1) Find the template by its type
-      const template = await ctx.db.shiftTemplate.findFirst({
+      const template = await db.shiftTemplate.findFirst({
         where: { type: templateType },
         select: { id: true, userIDs: true },
       });
@@ -53,7 +53,7 @@ export const usersRouter = createTRPCRouter({
       const templateId = template.id;
 
       // 2) Get the user’s current ShiftTemplatesIDs
-      const user = await ctx.db.user.findUnique({
+      const user = await db.user.findUnique({
         where: { id: userId },
         select: { ShiftTemplatesIDs: true },
       });
@@ -243,26 +243,5 @@ export const usersRouter = createTRPCRouter({
           message: "Registration failed",
         });
       }
-    }),
-  getOne: publicProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ input, ctx }) => {
-      //   let currentUserId: string;
-      //   const existingUser = await prisma.user.findUnique({
-      //     where: { id: input.userId },
-      //     include: {
-      //       _count: { select: { Subscribers: true, Videos: true } },
-      //       Subscribers: true,
-      //       // VideoReaction: true,
-      //     },
-      //   });
-      //   if (!existingUser) throw new TRPCError({ code: "NOT_FOUND" });
-      //   if (ctx.session) {
-      //     currentUserId = ctx.session.user.id;
-      //   }
-      //   const currentIsSubscribed = existingUser.Subscribers.some(
-      //     (subscriber) => subscriber.viewerId === currentUserId,
-      //   );
-      //   return { ...existingUser, currentIsSubscribed };
     }),
 });

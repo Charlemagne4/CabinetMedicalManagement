@@ -7,7 +7,6 @@ import { Form } from "@/components/ui/form";
 import MyForm from "./MyForm";
 import { signUpFormSchema as formSchema } from "./Schema";
 import { redirect, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { signIn, useSession } from "next-auth/react";
 
 import { toast } from "sonner";

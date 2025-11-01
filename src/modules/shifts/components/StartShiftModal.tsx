@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 function StartShiftModal() {
   const { data: canStartNewShift } = api.shifts.getCurrent.useQuery();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   const utils = api.useUtils();
   const [shiftStartModalOpen, setShiftStartModalOpen] = useState(false);
