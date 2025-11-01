@@ -423,6 +423,7 @@ export const entriesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { session } = ctx;
       const { entry } = input;
+      const { id: userId, role } = ctx.session.user;
 
       const currentShift = await getCurrentShift();
 
@@ -431,6 +432,24 @@ export const entriesRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
           message: "no shift active",
         });
+
+      if (role !== "admin") {
+        const currentUser = await db.user.findUnique({
+          where: { id: userId },
+          include: { ShiftTemplates: true },
+        });
+
+        if (
+          !currentUser?.ShiftTemplatesIDs.find(
+            (userShiftTemplate) =>
+              userShiftTemplate === currentShift.templateId,
+          )
+        )
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "shift non Assigné",
+          });
+      }
       logger.debug(entry);
       await addEntry(
         entry,

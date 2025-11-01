@@ -26,7 +26,7 @@ function MainView({ role }: MainViewProps) {
       <SectionHeader
         icon={Workflow}
         title="Opérations"
-        description="les transvactions et les activités clés du système."
+        description="les transactions et les activités clés du système."
       />
       <OperationsSection />
     </div>

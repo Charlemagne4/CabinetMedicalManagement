@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
+import ResetUserPasswordModal from "@/modules/users/components/ResetUserPasswordModal";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -215,6 +216,15 @@ export const UsersColumn: ColumnDef<entry>[] = [
           toast.error(err.message);
         },
       });
+      const resetPassword = api.users.resetPassword.useMutation({
+        onSuccess: async () => {
+          // toast.success(`${name} ${activated ? "Activé" : "Désactivé"}`);
+          // await utils.users.getMany.invalidate();
+        },
+        onError: (err) => {
+          toast.error(err.message);
+        },
+      });
 
       return (
         <DropdownMenu>
@@ -261,6 +271,9 @@ export const UsersColumn: ColumnDef<entry>[] = [
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSub>
+
+            <ResetUserPasswordModal userId={entry.id} />
+
             <DropdownMenuItem
               variant="destructive"
               onClick={() => switchUser.mutate({ userId: entry.id })}

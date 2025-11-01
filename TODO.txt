@@ -23,6 +23,7 @@ dashboard ✅
 check include user true in api ✅
 rate limiting ✅
 signin proper error handling ✅
+assign shift template to a user ✅
 charts par mois
 Dark mode/light mode check with the custom colors 
 update auth when logged in maybe ?
@@ -30,4 +31,3 @@ search of individual datatable should query db
 change user passwords for admin
 edit entry 
 badge rework
-assign shift template to a user

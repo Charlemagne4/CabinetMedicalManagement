@@ -8,6 +8,29 @@ import { now } from "@/lib/daysjs";
 import { ShiftType } from "@prisma/client";
 
 export const usersRouter = createTRPCRouter({
+  resetPassword: protectedProcedure
+    .input(z.object({ userId: z.string(), password: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { db } = ctx;
+      const { userId, password } = input;
+
+      const exists = await db.user.findUnique({ where: { id: userId } });
+      if (!exists) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not Found",
+        });
+      }
+
+      const salt = generateSalt();
+      const hashed = await hashPassword(password, salt);
+
+      const updatedUser = await db.user.update({
+        where: { id: userId },
+        data: { password: hashed, salt },
+      });
+      return { newPassword: password };
+    }),
   assignshift: protectedProcedure
     .input(
       z.object({
@@ -186,11 +209,12 @@ export const usersRouter = createTRPCRouter({
         email: z.string().min(1).email(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const { email, password, username } = input;
+        const { db } = ctx;
 
-        const exists = await prisma.user.findUnique({ where: { email } });
+        const exists = await db.user.findUnique({ where: { email } });
         if (exists) {
           throw new TRPCError({
             code: "BAD_REQUEST",
