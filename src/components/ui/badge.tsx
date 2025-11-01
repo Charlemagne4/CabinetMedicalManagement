@@ -17,7 +17,11 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        credit: "bg-destructive",
+        credit: "border-chart-3 border-2 bg-transparent text-chart-3",
+        Expense: "border-chart-5  bg-transparent text-chart-5",
+        consultation: "border-chart-2  bg-transparent text-chart-2",
+        bilan: "border-chart-1  bg-transparent text-chart-1",
+        paidCredit: "border-chart-4 border-2  bg-transparent text-chart-4",
       },
     },
     defaultVariants: {

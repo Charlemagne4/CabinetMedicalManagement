@@ -72,9 +72,10 @@ export const columns: ColumnDef<entry>[] = [
 
           <Badge
             variant={((): BadgeVariant => {
-              if (entry.Consultation?.type === "BILAN") return "credit";
-              if (entry.Consultation?.type === "CONSULTATION") return "credit";
-              return "destructive";
+              if (entry.Consultation?.type === "BILAN") return "bilan";
+              if (entry.Consultation?.type === "CONSULTATION")
+                return "consultation";
+              return "Expense";
             })()}
           >
             {entry.Consultation?.type ?? entryType}
@@ -84,7 +85,7 @@ export const columns: ColumnDef<entry>[] = [
           )}
           {entry.Consultation?.credit &&
             entry.Consultation?.credit?.isPaid === true && (
-              <Badge className="bg-accent-foreground">Payé</Badge>
+              <Badge variant={"paidCredit"}>Payé</Badge>
             )}
         </div>
       );
@@ -125,8 +126,8 @@ export const columns: ColumnDef<entry>[] = [
             "text-left font-semibold",
             (() => {
               if (entry.Consultation?.credit?.isPaid === false)
-                return "text-yellow-500";
-              const color = isDepense ? "text-red-600" : "text-green-600";
+                return "text-chart-3";
+              const color = isDepense ? "text-chart-5" : "text-chart-2";
               return color;
             })(),
           )}

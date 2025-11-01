@@ -28,6 +28,6 @@ charts par mois
 Dark mode/light mode check with the custom colors 
 update auth when logged in maybe ?
 search of individual datatable should query db 
-change user passwords for admin
+change user passwords for admin ✅
+badge rework✅
 edit entry 
-badge rework

@@ -39,15 +39,15 @@ function DataChartSuspense() {
     {
       entry: "credits",
       value: chartData2.unpaidCredits,
-      fill: "var(--chart-1)",
+      fill: "var(--chart-3)",
     },
-    { entry: "bilans", value: chartData2.bilan, fill: "var(--chart-2)" },
+    { entry: "bilans", value: chartData2.bilan, fill: "var(--chart-1)" },
     {
       entry: "consultations",
       value: chartData2.consultations,
-      fill: "var(--chart-3)",
+      fill: "var(--chart-2)",
     },
-    { entry: "depenses", value: chartData2.depenses, fill: "var(--chart-4)" },
+    { entry: "depenses", value: chartData2.depenses, fill: "var(--chart-5)" },
   ];
 
   return (
