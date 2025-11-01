@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import { prisma } from "../../../../prisma/prisma";
 import { logger } from "@/utils/pino";
 import { db } from "@/server/db";
 import { now } from "@/lib/daysjs";
@@ -91,7 +90,7 @@ export async function getCurrentShift() {
   const midnightToday = now().startOf("day").toDate();
 
   // 🟢 STEP 1: Find any shift that started today (or late last night) and is still open
-  const ongoingShift = await prisma.shift.findFirst({
+  const ongoingShift = await db.shift.findFirst({
     where: {
       OR: [
         // started today and not ended
@@ -137,7 +136,7 @@ export async function getCurrentShift() {
       ? dayjs(midnightToday).subtract(1, "day").toDate()
       : midnightToday;
 
-  const predictedShift = await prisma.shift.findFirst({
+  const predictedShift = await db.shift.findFirst({
     where: {
       templateId: currentTemplate.id,
       startTime: { gte: startBoundary },

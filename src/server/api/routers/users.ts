@@ -1,8 +1,7 @@
-import { prisma } from "../../../../prisma/prisma";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { generateSalt, hashPassword } from "@/utils/passwordHasher";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { logger } from "@/utils/pino";
 import { now } from "@/lib/daysjs";
 import { ShiftType } from "@prisma/client";
@@ -201,7 +200,7 @@ export const usersRouter = createTRPCRouter({
             : null,
       };
     }),
-  register: protectedProcedure
+  register: publicProcedure
     .input(
       z.object({
         username: z.string().min(1),
@@ -213,7 +212,7 @@ export const usersRouter = createTRPCRouter({
       try {
         const { email, password, username } = input;
         const { db } = ctx;
-
+        logger.debug({ email, password, username });
         const exists = await db.user.findUnique({ where: { email } });
         if (exists) {
           throw new TRPCError({
@@ -225,7 +224,7 @@ export const usersRouter = createTRPCRouter({
         const salt = generateSalt();
         const hashed = await hashPassword(password, salt);
 
-        await prisma.user.create({
+        await db.user.create({
           data: {
             email,
             password: hashed,

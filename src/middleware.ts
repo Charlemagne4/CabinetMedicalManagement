@@ -1,50 +1,46 @@
 import { getToken } from "next-auth/jwt";
 import { type NextRequest, NextResponse } from "next/server";
+import { logger } from "./utils/pino";
 
 const secret = process.env.AUTH_SECRET;
 
 const protectedRoutes = ["/main"];
 const adminRoutes = ["/dashboard"];
 
+function redirectToSignin(pathname: string, origin: string) {
+  const callbackUrl = encodeURIComponent(pathname);
+  const redirectUrl = new URL("/signin", origin);
+  redirectUrl.searchParams.set("callbackUrl", callbackUrl);
+
+  const response = NextResponse.redirect(redirectUrl);
+  response.headers.set("Cache-Control", "no-store");
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname, origin } = request.nextUrl;
-  const token = await getToken({
-    req: request,
-    secret,
-  });
+  const token = await getToken({ req: request, secret });
   const role = token?.role;
 
-  const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
+  logger.debug({ token }, "Token");
   const isAdminRoute = adminRoutes.some((r) => pathname.startsWith(r));
+  const isProtectedRoute = protectedRoutes.some((r) => pathname.startsWith(r));
 
+  // Handle admin routes first
   if (isAdminRoute) {
-    if (!token) {
-      const callbackUrl = encodeURIComponent(pathname);
-      const redirectUrl = new URL("/signin", origin);
-      redirectUrl.searchParams.set("callbackUrl", callbackUrl);
-
-      const redirectResponse = NextResponse.redirect(redirectUrl);
-      redirectResponse.headers.set("Cache-Control", "no-store");
-      return redirectResponse;
-    }
-    if (role !== "admin") {
-      return NextResponse.redirect(new URL("/", origin));
-    }
-  } else if (isProtected) {
-    if (!token) {
-      const callbackUrl = encodeURIComponent(pathname);
-      const redirectUrl = new URL("/signin", origin);
-      redirectUrl.searchParams.set("callbackUrl", callbackUrl);
-
-      const redirectResponse = NextResponse.redirect(redirectUrl);
-      redirectResponse.headers.set("Cache-Control", "no-store");
-      return redirectResponse;
-    }
+    if (!token) return redirectToSignin(pathname, origin);
+    if (role !== "admin") return NextResponse.redirect(new URL("/", origin));
   }
 
+  // Handle other protected routes
+  if (isProtectedRoute && !token) {
+    return redirectToSignin(pathname, origin);
+  }
+
+  // Allow all other requests
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/", "/dashboard/:path*", "/main/:path*"],
+  matcher: ["/dashboard/:path*", "/main/:path*"],
 };
