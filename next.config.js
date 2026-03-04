@@ -8,16 +8,6 @@ import "./src/env.js";
 const config = {
   //
   serverExternalPackages: ["pino", "pino-pretty", "thread-stream"],
-  webpack(config, { isServer }) {
-    if (isServer) {
-      // Ensure thread-stream is loaded as a commonjs external if needed
-      config.externals ||= [];
-      config.externals.push({
-        "thread-stream": "commonjs thread-stream",
-      });
-    }
-    return config;
-  },
 
   images: {
     remotePatterns: [
