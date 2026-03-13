@@ -4,6 +4,7 @@ This project is a **medical cabinet management web application** that helps clin
 
 It is built on top of the T3 Stack (Next.js, NextAuth, Prisma, Tailwind CSS, tRPC) and extends it with MongoDB (via Prisma) and Upstash Redis for rate limiting.
 
+Link: https://cabinet-medical-management.vercel.app
 ---
 
 ### What the project does
